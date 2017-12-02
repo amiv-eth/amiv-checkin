@@ -2,8 +2,8 @@ from datetime import datetime, timedelta
 import requests
 
 
-class AMIV_API_Interface:
-    """ Interface class to fetch and update data through the AMIV API """
+class PVK_API_Interface:
+    """ Interface class to fetch and update data through the PVK API """
     def __init__(self):
         self.amiv_api_url = "https://amiv-api.ethz.ch"
         self.api_url = ""  # TODO: Add URL of PVK API
