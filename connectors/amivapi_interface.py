@@ -14,7 +14,7 @@ class AMIV_API_Interface:
     def login(self, username, password):
         """ Log in the user to obtain usable token for requests """
         payload = {"user": str(username), "password": password}
-        r = requests.post(self.api_url + '/events', data=payload)
+        r = requests.post(self.api_url + '/sessions', data=payload)
         if r.status_code is 201:
             self.token = r.json()['token']
             self.auth_obj = requests.auth.HTTPBasicAuth(self.token, "")
