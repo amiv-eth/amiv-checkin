@@ -34,8 +34,19 @@ class AMIV_API_Interface:
         r = requests.get(self.api_url + _filter, auth=self.auth_obj)
         return r.json()
 
-
-if __name__ is "__main__":
-    i = AMIV_API_Interface()
-    print(i.get_next_events())
-    print(i.get_signups_for_event('1'))
+    def checkin_field(self, user_id, event_id):
+        """ Check in a user to an event by flipping the checked_in valuei """
+        r = requests.get(self.api_url + '/eventsignups/' + event_id,
+                         auth=self.auth_obj)
+        if r.status_code != 200:
+            return False
+        etag = r.json()['_etag']
+        url = self.api_url + '/eventsignups/' + event_id
+        header = {'If-Match': etag}
+        payload = {"checked_in": "True"}
+        _filter = '?where={"user":"%s"}' % user_id
+        r = requests.patch(url + _filter,
+                           auth=self.auth_obj,
+                           headers=header,
+                           data=payload)
+        return r.status_code == 200
