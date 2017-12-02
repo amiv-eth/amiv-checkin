@@ -102,6 +102,8 @@ class AMIV_API_Interface:
     def checkout_field(self, info):
         """ Check in a user to an event by flipping the checked_in value """
         user_id = self._get_userid_from_info(info)
+        if 'Error' in user_id:
+            return False
         _filter = '?where={"user":"%s", "event":"%s"}' % user_id, self.event_id
         r = requests.get(self.api_url + '/eventsignups' + _filter,
                          auth=self.auth_obj)
