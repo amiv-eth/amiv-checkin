@@ -8,9 +8,11 @@
   {{ utils.flashed_messages() }}
   <br/>
   <div class="center">
-    <h1>Login to your account</h1>
+    <h1>Login to the AMIV Check-In Tool</h1>
     <br/>
-    {{ wtf.quick_form(form) }}
+    {{ wtf.quick_form(pinform) }}
+    <hr class="intro-divider">
+    {{ wtf.quick_form(credform) }}
   </div>
 </div>
 {% endblock %}

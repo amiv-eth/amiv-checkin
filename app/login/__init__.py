@@ -1,6 +1,6 @@
 
 from flask import Blueprint
 
-auth = Blueprint('auth', __name__)
+login_bp = Blueprint('login', __name__)
 
 from . import views
