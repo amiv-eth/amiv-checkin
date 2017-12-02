@@ -89,10 +89,9 @@ class AMIV_API_Interface:
         if r.status_code != 200:
             return False
         etag = r.json()['_etag']
-        url = self.api_url + '/eventsignups/' + self.event_id
+        url = self.api_url + '/eventsignups'
         header = {'If-Match': etag}
         payload = {"checked_in": "True"}
-        _filter = '?where={"user":"%s"}' % user_id
         r = requests.patch(url + _filter,
                            auth=self.auth_obj,
                            headers=header,
@@ -110,10 +109,9 @@ class AMIV_API_Interface:
         if r.status_code != 200:
             return False
         etag = r.json()['_etag']
-        url = self.api_url + '/eventsignups/' + self.event_id
+        url = self.api_url + '/eventsignups'
         header = {'If-Match': etag}
         payload = {"checked_in": "False"}
-        _filter = '?where={"user":"%s"}' % user_id
         r = requests.patch(url + _filter,
                            auth=self.auth_obj,
                            headers=header,
