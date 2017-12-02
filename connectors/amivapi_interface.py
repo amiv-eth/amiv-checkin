@@ -22,7 +22,7 @@ class AMIV_API_Interface:
     def get_next_events(self):
         """ Fetch the upcoming events between today and tomorrow """
         low_bound = datetime.today().strftime(self.datetime_format)
-        up_bound = datetime.today() + timedelta(days=1)
+        up_bound = datetime.today() + timedelta(days=100)
         up_bound = up_bound.strftime(self.datetime_format)
         _range = '{"time_start":{"$gt":"'+low_bound+'","$lt":"'+up_bound+'"}}'
         r = requests.get(self.api_url + '/events?where=' + _range)
@@ -66,7 +66,7 @@ class AMIV_API_Interface:
                 return r.json()['_id']
         return "Error: Multiple entries found or no user found"
 
-    def get_userid_from_info(self, info):
+    def _get_userid_from_info(self, info):
         """ Choose the function to use to fetch the u_id """
         if '@' in info:
             user_id = self._get_userid_from_email(info)
