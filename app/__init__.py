@@ -16,6 +16,7 @@ db = SQLAlchemy()
 # get flask login manager
 login_manager = LoginManager()
 
+
 def create_app(config_name):
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_object(app_config[config_name])
@@ -26,13 +27,11 @@ def create_app(config_name):
     login_manager.login_message = "You must be logged in to access this page."
     login_manager.login_view = "login.login"
 
-    migrate = Migrate(app, db)
+    Migrate(app, db)
 
     Bootstrap(app)
 
-
     from app import models
-
 
     from .login import login_bp
     app.register_blueprint(login_bp)

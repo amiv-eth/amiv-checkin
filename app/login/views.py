@@ -51,7 +51,7 @@ def login():
                 
                 if len(presencelists) > 1:
                     # we have a database error
-                    raise Error('Multiple PresenceList with same PIN found!')
+                    raise Exception('Multiple PresenceList with same PIN found!')
 
                 if len(presencelists) > 0:
                     pl = presencelists[0]
@@ -67,8 +67,6 @@ def login():
 
                 # credential form was submitted, check connector type
                 conn = get_connector_by_id(connectors, credform.backend.data)
-                #except Exception as E:
-                #    abort(400)
 
                 # try to validate against connector
                 un = credform.username.data
@@ -80,7 +78,7 @@ def login():
                     return redirect(url_for('login.login'))
 
                 # credentials are valid, create new user! Create new pin and check if already set.
-                retrycnt = 1000;
+                retrycnt = 1000
                 while retrycnt > 0:
                     # create secure new random pin
                     pin = 100000 + secrets.randbelow(900000)
@@ -121,17 +119,17 @@ def chooseevent():
 
     # create form
     chooseeventform = ChooseEventForm()
-    #try:
-    events = conn.get_next_events();
-    print(events)
-    #except Exception as E:
-    #    print(E)
-    #    abort(make_response("Could not get next events.", 500))
+    try:
+        events = conn.get_next_events()
+    except Exception as E:
+        flash("Could not get next events: {}".format(E))
+        logout_user()
+        return redirect(url_for('login.login'))
 
     # create event list for drop-down menu
     elist = []
     for e in events:
-        elist.append((e['id'], e['title']))
+        elist.append((e['_id'], e['title']))
     chooseeventform.chooseevent.choices = elist
 
     # check if we are on POST
@@ -141,7 +139,7 @@ def chooseevent():
             ev_id_string = chooseeventform.chooseevent.data
             ev = None
             for eidx in range(len(events)):
-                if events[eidx]['id'] == ev_id_string:
+                if events[eidx]['_id'] == ev_id_string:
                     ev = events[eidx]
                     break
             if ev is None:
@@ -150,8 +148,8 @@ def chooseevent():
 
             # check if user already exists for event id
             print(pl.conn_type)
-            print(ev['id'])
-            s = PresenceList.query.filter_by(conn_type=pl.conn_type, event_id=ev['id']).all()
+            print(ev['_id'])
+            s = PresenceList.query.filter_by(conn_type=pl.conn_type, event_id=ev['_id']).all()
             print(s)
             if len(s) > 0:
                 # we have already a pin registered for this event, renew token, show old pin, logout user, and redirect
@@ -167,7 +165,7 @@ def chooseevent():
                 return redirect(url_for('login.login'))
 
             # ok, new event chosen. Set event_id in current PresenceList and go further
-            pl.event_id = ev['id']
+            pl.event_id = ev['_id']
             db.session.commit()
             return redirect(url_for('checkin.checkin'))
 

@@ -1,5 +1,8 @@
 from datetime import datetime, timedelta
 import requests
+from math import ceil
+
+from pip._vendor.packaging.markers import _eval_op
 
 
 class AMIV_API_Interface:
@@ -10,13 +13,14 @@ class AMIV_API_Interface:
 
         self.token = ""
         self.auth_obj = ""
+        self.event_id = ""
 
         self.human_string = "AMIV Events"
         self.id_string = "conn_amivapi"
 
     def login(self, username, password):
         """ Log in the user to obtain usable token for requests """
-        payload = {"user": str(username), "password": password}
+        payload = {"username": str(username), "password": str(password)}
         r = requests.post(self.api_url + '/sessions', data=payload)
         if r.status_code is 201:
             self.token = r.json()['token']
@@ -32,34 +36,64 @@ class AMIV_API_Interface:
 
     def get_next_events(self):
         """ Fetch the upcoming events between today and tomorrow """
-        low_bound = datetime.today().strftime(self.datetime_format)
+        low_bound = datetime.today() - timedelta(days=2)
+        low_bound = low_bound.strftime(self.datetime_format)
         up_bound = datetime.today() + timedelta(days=100)
         up_bound = up_bound.strftime(self.datetime_format)
         _range = '{"time_start":{"$gt":"'+low_bound+'","$lt":"'+up_bound+'"}}'
         r = requests.get(self.api_url + '/events?where=' + _range)
+        #r = requests.get(self.api_url + '/events')
+        ntotal = r.json()['_meta']['total']
+        npage = r.json()['_meta']['max_results']
+        if min(ntotal, npage) is 0:
+            raise Exception("No Events found in the next 100 days.")
 
+        # get all events from all pages
+        _events = list()
+        for p in range(1, ceil(ntotal/npage)):
+            r = requests.get(self.api_url + '/events?page={}&where={}'.format(str(p)), _range)
+            _events.extend(r.json()['_items'])
 
-        print('----------')
-        print(r.json())
-        print('----------')
+        print(_events)
 
-        
-        if min(r.json()['total'], r.json()['max_results']) is 0:
-            raise Exception("No Events found in the next 100 days")
         response = list()
-        for key, event in r.json().iteritems():
+        for event in _events:
+            # get all possible data:
+
+            _id = event['_id']
+
+            if 'title_en' in event:
+                title = event['title_en']
+            else:
+                title = event['title_de']
+
+            if 'spots' in event:
+                spots = event['spots']
+            else:
+                spots = "unlimited"
+
+            if 'signup_count' in event:
+                signup_count = event['signup_count']
+            else:
+                signup_count = ''
+
+            if 'time_start' in event:
+                time_start = event['time_start']
+            else:
+                time_start = 'perm.'
+
             response.append({
-                             '_id': event['_id'],
-                             'title': event['title'],
-                             'spots': event['spots'],
-                             'signup_count': event['signup_count'],
-                             'time_start': event['time_start']})
+                             '_id': _id,
+                             'title': title,
+                             'spots': spots,
+                             'signup_count': signup_count,
+                             'time_start': time_start})
         return response
 
-    def get_signups_for_event(self, event_id):
+    def get_signups_for_event(self):
         """ Fetch the list of participants for a specific event """
         _filter = ('/eventsignups?where={"event":"%s"}&embedded={"user":1}'
-                   % event_id)
+                   % self.event_id)
         r = requests.get(self.api_url + _filter, auth=self.auth_obj)
         if min(r.json()['total'], r.json()['max_results']) is 0:
             raise Exception("No eventsignups found for this event")

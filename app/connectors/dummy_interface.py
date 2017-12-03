@@ -15,24 +15,24 @@ class Dummy_Interface:
 
         # dummy-connector internals
         self.dummy_users = [
-            {'id': '1', 'bn': 'user1', 'pw': 'pw1'}, 
-            {'id': '2', 'bn': 'user2', 'pw': 'pw2'}, 
-            {'id': '3', 'bn': 'user3', 'pw': 'pw3'}, 
-            {'id': '4', 'bn': 'user4', 'pw': 'pw4'},
-            {'id': '5', 'bn': 'user5', 'pw': 'pw5'}, 
-            {'id': '6', 'bn': 'user6', 'pw': 'pw6'}, 
-            {'id': '7', 'bn': 'user7', 'pw': 'pw7'}, 
-            {'id': '8', 'bn': 'user8', 'pw': 'pw8'}
+            {'_id': '1', 'bn': 'user1', 'pw': 'pw1'},
+            {'_id': '2', 'bn': 'user2', 'pw': 'pw2'},
+            {'_id': '3', 'bn': 'user3', 'pw': 'pw3'},
+            {'_id': '4', 'bn': 'user4', 'pw': 'pw4'},
+            {'_id': '5', 'bn': 'user5', 'pw': 'pw5'},
+            {'_id': '6', 'bn': 'user6', 'pw': 'pw6'},
+            {'_id': '7', 'bn': 'user7', 'pw': 'pw7'},
+            {'_id': '8', 'bn': 'user8', 'pw': 'pw8'}
         ]
         self.dummy_events = [
-            {'id': '1', 'title': 'event1', 'spots': 61, 'signup_count': 41, 'time_start': '2017-12-02T19:01:00Z'},
-            {'id': '2', 'title': 'event2', 'spots': 62, 'signup_count': 42, 'time_start': '2017-12-02T19:02:00Z'},
-            {'id': '3', 'title': 'event3', 'spots': 63, 'signup_count': 43, 'time_start': '2017-12-02T19:03:00Z'},
-            {'id': '4', 'title': 'event4', 'spots': 64, 'signup_count': 44, 'time_start': '2017-12-02T19:04:00Z'},
-            {'id': '5', 'title': 'event5', 'spots': 65, 'signup_count': 45, 'time_start': '2017-12-02T19:01:00Z'},
-            {'id': '6', 'title': 'event6', 'spots': 66, 'signup_count': 46, 'time_start': '2017-12-02T19:02:00Z'},
-            {'id': '7', 'title': 'event7', 'spots': 67, 'signup_count': 47, 'time_start': '2017-12-02T19:03:00Z'},
-            {'id': '8', 'title': 'event8', 'spots': 68, 'signup_count': 48, 'time_start': '2017-12-02T19:04:00Z'}
+            {'_id': '1', 'title': 'event1', 'spots': 61, 'signup_count': 41, 'time_start': '2017-12-02T19:01:00Z'},
+            {'_id': '2', 'title': 'event2', 'spots': 62, 'signup_count': 42, 'time_start': '2017-12-02T19:02:00Z'},
+            {'_id': '3', 'title': 'event3', 'spots': 63, 'signup_count': 43, 'time_start': '2017-12-02T19:03:00Z'},
+            {'_id': '4', 'title': 'event4', 'spots': 64, 'signup_count': 44, 'time_start': '2017-12-02T19:04:00Z'},
+            {'_id': '5', 'title': 'event5', 'spots': 65, 'signup_count': 45, 'time_start': '2017-12-02T19:01:00Z'},
+            {'_id': '6', 'title': 'event6', 'spots': 66, 'signup_count': 46, 'time_start': '2017-12-02T19:02:00Z'},
+            {'_id': '7', 'title': 'event7', 'spots': 67, 'signup_count': 47, 'time_start': '2017-12-02T19:03:00Z'},
+            {'_id': '8', 'title': 'event8', 'spots': 68, 'signup_count': 48, 'time_start': '2017-12-02T19:04:00Z'}
         ]
         self.dummy_eventsignups = [
             #EID, UID, checkin flag
@@ -79,7 +79,7 @@ class Dummy_Interface:
 
         marcoep: This function should return a list of dicts.
         Every dict represents one event and has the following keys:
-        'id'            - the event id, string(128)
+        '_id'            - the event id, string(128)
         'title'         - the human readable title of the event, string(128)
         'spots'         - how many sign-up spots are there, integer
         'signup_count'  - how many people have signed up, integer
@@ -113,7 +113,7 @@ class Dummy_Interface:
         for idx in range(len(self.dummy_eventsignups)):
             if self.dummy_eventsignups[idx][0] == self.event_id:
                 for u in self.dummy_users:
-                    if u['id'] == self.dummy_eventsignups[idx][1]:
+                    if u['_id'] == self.dummy_eventsignups[idx][1]:
                         signups.append({'name': 'name-'+u['bn'],
                                         'nethz': 'nethz-'+u['bn'],
                                         'legi': 'legi-'+u['bn'], 
@@ -162,7 +162,7 @@ class Dummy_Interface:
 
         evsig = None
         for es in self.dummy_eventsignups:
-            if es[0] == self.event_id and es[1] == uid['id']:
+            if es[0] == self.event_id and es[1] == uid['_id']:
                 evsig = es
                 
         if evsig is None:
@@ -211,7 +211,7 @@ class Dummy_Interface:
 
         # search correct event signup
         for es in self.dummy_eventsignups:
-            if es[0] == self.event_id and es[1] == uid['id']:
+            if es[0] == self.event_id and es[1] == uid['_id']:
                 evsig = es
                 break
 
