@@ -108,3 +108,6 @@ venv.bak/
 
 #sqlite debugging
 *.db
+
+# PyCharm
+.idea/
