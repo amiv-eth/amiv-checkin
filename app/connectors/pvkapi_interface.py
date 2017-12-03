@@ -12,6 +12,9 @@ class PVK_API_Interface:
         self.token = ""
         self.auth_obj = ""
 
+        self.human_string = "AMIV PVK Courses"
+        self.id_string = "conn_pvkapi"
+
     def login(self, username, password):
         """ Log in the user to obtain usable token for requests """
         payload = {"user": str(username), "password": password}

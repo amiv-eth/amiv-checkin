@@ -11,6 +11,9 @@ class AMIV_API_Interface:
         self.token = ""
         self.auth_obj = ""
 
+        self.human_string = "AMIV Events"
+        self.id_string = "conn_amivapi"
+
     def login(self, username, password):
         """ Log in the user to obtain usable token for requests """
         payload = {"user": str(username), "password": password}
@@ -18,6 +21,12 @@ class AMIV_API_Interface:
         if r.status_code is 201:
             self.token = r.json()['token']
             self.auth_obj = requests.auth.HTTPBasicAuth(self.token, "")
+        return self.token
+
+    def set_token(self, token):
+        """ log-in just with the token """
+        self.token = token;
+        self.auth_obj = requests.auth.HTTPBasicAuth(self.token, "")
 
     def get_next_events(self):
         """ Fetch the upcoming events between today and tomorrow """
@@ -28,15 +37,15 @@ class AMIV_API_Interface:
         r = requests.get(self.api_url + '/events?where=' + _range)
         return r.json()
 
-    def get_signups_for_event(self, event_id):
-        """ Fetch the list of participants for a specific event """
-        _filter = '/eventsignups?where={"event":"%s"}' % event_id
-        r = requests.get(self.api_url + _filter, auth=self.auth_obj)
-        return r.json()
-
     def set_event(self, event_id):
         """ Set the event_id for this instance of the class """
         self.event_id = event_id
+
+    def get_signups_for_event(self):
+        """ Fetch the list of participants for a specific event """
+        _filter = '/eventsignups?where={"event":"%s"}' % self.event_id
+        r = requests.get(self.api_url + _filter, auth=self.auth_obj)
+        return r.json()
 
     def _get_userid_from_legi(self, legi):
         """ Fetch the user_id from a legi number """

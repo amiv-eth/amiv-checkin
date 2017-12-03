@@ -66,18 +66,17 @@ def login():
             if credform.validate_on_submit():
 
                 # credential form was submitted, check connector type
-                try:
-                    conn = get_connector_by_id(connectors, credform.backend.data)
-                except Exception as E:
-                    print(E)
-                    abort(400)
+                conn = get_connector_by_id(connectors, credform.backend.data)
+                #except Exception as E:
+                #    abort(400)
 
                 # try to validate against connector
                 un = credform.username.data
                 pw = credform.password.data
-                token = conn.login(un, pw)
-                if token is None:
-                    flash('Invalid username or password.')
+                try: 
+                    token = conn.login(un, pw)
+                except Exception as E:
+                    flash(str(E))
                     return redirect(url_for('login.login'))
 
                 # credentials are valid, create new user! Create new pin and check if already set.
@@ -93,7 +92,7 @@ def login():
                     abort(500)
 
                 # create new user account
-                npl = PresenceList(conn_type=conn.id_string, pin=pin, token=token, event_id="--none--")
+                npl = PresenceList(conn_type=conn.id_string, pin=pin, token=token, event_id=None)
                 db.session.add(npl)
                 db.session.commit()
                 login_user(npl)
@@ -118,12 +117,14 @@ def chooseevent():
     connectors = create_connectors()
     pl = current_user
     conn = get_connector_by_id(connectors, pl.conn_type)
+    conn.set_token(pl.token)
 
     # create form
     chooseeventform = ChooseEventForm()
     try:
-        events = conn.get_next_events(pl.token);
-    except:
+        events = conn.get_next_events();
+        print(events)
+    except Exception as E:
         print("Could not get next events.")
         print(E)
         abort(500)
