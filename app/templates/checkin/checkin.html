@@ -5,53 +5,53 @@
 {% block body %}
 <div class="center">
   <nav class="navbar navbar-default navbar-fixed-top topnav" role="navigation">
-      <div class="container topnav">
-        <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand topnav" href="{{ url_for('login.login') }}">AMIV Check-In</a>
-        </div>
-        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            <ul class="nav navbar-nav navbar-right">
-              <li><a href="{{ url_for('login.logout') }}">Logout</a></li>
-              <li><a><i class="fa fa-user"></i>  Your PIN: {{ current_user.pin }}</a></li>
-          </ul>
-        </div>
+    <div class="container topnav">
+      <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+              <span class="sr-only">Toggle navigation</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand topnav" href="{{ url_for('login.login') }}">AMIV Check-In</a>
       </div>
+      <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+          <ul class="nav navbar-nav navbar-right">
+            <li><a href="{{ url_for('login.logout') }}">Logout</a></li>
+            <li><a><i class="fa fa-user"></i>  Your PIN: {{ current_user.pin }}</a></li>
+        </ul>
+      </div>
+    </div>
   </nav>
   <div class="content-section">
-  <br/>
-  {{ utils.flashed_messages() }}
-  <br/>
-  {{ wtf.quick_form(form, form_type='horizontal') }}
-  <hr class="intro-divider">
-  <table class="table table-striped table-bordered">
-    <thead>
-      <tr>
-        <th width="25%"> Name </th>
-        <th width="15%"> nethz </th>
-        <th width="15%"> Legi </th>
-        <th width="30%"> e-Mail </th>
-        <th width="15%"> Status </th>
-      </tr>
-    </thead>
-    <tbody>
-    {% for u in signups %}
-      <tr>
-        <td> {{ u['name'] }} </td>
-        <td> {{ u['nethz'] }} </td>
-        <td> {{ u['legi'] }} </td>
-        <td> {{ u['email'] }} </td>
-        <td> {{ u['status'] }} </td>
-      </tr>
-    {% endfor %}
-    </tbody>
-  </table>
-</div>
+    <br/>
+    {{ utils.flashed_messages() }}
+    <br/>
+    {{ wtf.quick_form(form, form_type='horizontal') }}
+    <hr class="intro-divider">
+    <table class="table table-striped table-bordered">
+      <thead>
+        <tr>
+          <th width="25%"> Name </th>
+          <th width="15%"> nethz </th>
+          <th width="15%"> Legi </th>
+          <th width="30%"> e-Mail </th>
+          <th width="15%"> Status </th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for u in signups %}
+        <tr>
+          <td> {{ u['name'] }} </td>
+          <td> {{ u['nethz'] }} </td>
+          <td> {{ u['legi'] }} </td>
+          <td> {{ u['email'] }} </td>
+          <td> {{ u['checked_in'] }} </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
 {% endblock %}
 

@@ -1,3 +1,4 @@
+import secrets
 
 class Dummy_Interface:
     """ Interface class to fetch and update data through the AMIV API """
@@ -17,21 +18,42 @@ class Dummy_Interface:
             {'id': '1', 'bn': 'user1', 'pw': 'pw1'}, 
             {'id': '2', 'bn': 'user2', 'pw': 'pw2'}, 
             {'id': '3', 'bn': 'user3', 'pw': 'pw3'}, 
-            {'id': '4', 'bn': 'user4', 'pw': 'pw4'}
+            {'id': '4', 'bn': 'user4', 'pw': 'pw4'},
+            {'id': '5', 'bn': 'user5', 'pw': 'pw5'}, 
+            {'id': '6', 'bn': 'user6', 'pw': 'pw6'}, 
+            {'id': '7', 'bn': 'user7', 'pw': 'pw7'}, 
+            {'id': '8', 'bn': 'user8', 'pw': 'pw8'}
         ]
         self.dummy_events = [
             {'id': '1', 'title': 'event1', 'spots': 61, 'signup_count': 41, 'time_start': '2017-12-02T19:01:00Z'},
             {'id': '2', 'title': 'event2', 'spots': 62, 'signup_count': 42, 'time_start': '2017-12-02T19:02:00Z'},
             {'id': '3', 'title': 'event3', 'spots': 63, 'signup_count': 43, 'time_start': '2017-12-02T19:03:00Z'},
-            {'id': '4', 'title': 'event4', 'spots': 64, 'signup_count': 44, 'time_start': '2017-12-02T19:04:00Z'}
+            {'id': '4', 'title': 'event4', 'spots': 64, 'signup_count': 44, 'time_start': '2017-12-02T19:04:00Z'},
+            {'id': '5', 'title': 'event1', 'spots': 65, 'signup_count': 45, 'time_start': '2017-12-02T19:01:00Z'},
+            {'id': '6', 'title': 'event2', 'spots': 66, 'signup_count': 46, 'time_start': '2017-12-02T19:02:00Z'},
+            {'id': '7', 'title': 'event3', 'spots': 67, 'signup_count': 47, 'time_start': '2017-12-02T19:03:00Z'},
+            {'id': '8', 'title': 'event4', 'spots': 68, 'signup_count': 48, 'time_start': '2017-12-02T19:04:00Z'}
         ]
         self.dummy_eventsignups = [
             #EID, UID, checkin flag
-            ('1', '1', False),
-            ('2', '1', True),  ('2', '2', False),
-            ('3', '1', False), ('3', '2', True),  ('3', '3', False),
-            ('4', '1', None),  ('4', '2', None), ('4', '3', None),  ('4', '4', None)
+            ('1', '1', self._get_random_bool_none()),
+            ('2', '1', self._get_random_bool_none()),  ('2', '2', self._get_random_bool_none()),
+            ('3', '1', self._get_random_bool_none()), ('3', '2', self._get_random_bool_none()),  ('3', '3', self._get_random_bool_none()),
+            ('4', '1', self._get_random_bool_none()),  ('4', '2', self._get_random_bool_none()),  ('4', '3', self._get_random_bool_none()),  ('4', '4', self._get_random_bool_none()),
+            ('5', '5', self._get_random_bool_none()),  ('5', '1', self._get_random_bool_none()),
+            ('6', '5', self._get_random_bool_none()),  ('6', '6', self._get_random_bool_none()), ('6', '1', self._get_random_bool_none()),  ('6', '2', self._get_random_bool_none()),
+            ('7', '5', self._get_random_bool_none()), ('7', '6', self._get_random_bool_none()),  ('7', '7', self._get_random_bool_none()), ('7', '1', self._get_random_bool_none()), ('7', '2', self._get_random_bool_none()),  ('7', '3', self._get_random_bool_none()),
+            ('8', '5', self._get_random_bool_none()),  ('8', '6', self._get_random_bool_none()),  ('8', '7', self._get_random_bool_none()),  ('8', '8', self._get_random_bool_none()),  ('8', '1', self._get_random_bool_none()),  ('8', '2', self._get_random_bool_none()),  ('8', '3', self._get_random_bool_none()),  ('8', '4', self._get_random_bool_none())
         ]
+
+    def _get_random_bool_none(self):
+        p = secrets.randbelow(3)
+        if p == 0:
+            return None
+        elif p == 1:
+            return True
+        else:
+            return False
 
     def login(self, username, password):
         """ Log in the user to obtain usable token for requests
@@ -82,7 +104,7 @@ class Dummy_Interface:
         'nethz'     - the "ETH Kürzel" of the participant, string
         'legi'      - the Legi number of the participant, string
         'email'     - the e-mail address of the participant, string
-        'status'    - a boolean value:
+        'checked_in'- a boolean value:
             True    if participant is checked in
             False   if participant was here but was checked out
             None    if no check-in / check-out has been registered for participant
@@ -96,7 +118,7 @@ class Dummy_Interface:
                                         'nethz': 'nethz-'+u['bn'],
                                         'legi': 'legi-'+u['bn'], 
                                         'email': 'email-'+u['bn'], 
-                                        'status': self.self.dummy_eventsignups[idx][2] })
+                                        'checked_in': self.dummy_eventsignups[idx][2] })
         return signups
 
     def checkin_field(self, info):
@@ -132,10 +154,19 @@ class Dummy_Interface:
         uid = ul[0]
 
         # search correct event signup
+        print()
+        print(self.event_id)
+        print(self.token)
+        print(uid)
+        print()
+
+        evsig = None
         for es in self.dummy_eventsignups:
-            if es[0] == self.event_id and es[1] == uid:
+            if es[0] == self.event_id and es[1] == uid['id']:
                 evsig = es
-                break
+                
+        if evsig is None:
+            raise Exception('User not signed-up for event!')
 
         # check if user is already checked in:
         if evsig[2] == True:
@@ -180,7 +211,7 @@ class Dummy_Interface:
 
         # search correct event signup
         for es in self.dummy_eventsignups:
-            if es[0] == self.event_id and es[1] == uid:
+            if es[0] == self.event_id and es[1] == uid['id']:
                 evsig = es
                 break
 

@@ -40,4 +40,7 @@ def create_app(config_name):
     from .checkin import checkin_bp
     app.register_blueprint(checkin_bp)
 
+    from .mutate import mutate_bp
+    app.register_blueprint(mutate_bp)
+
     return app
