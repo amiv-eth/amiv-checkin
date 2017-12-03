@@ -19,7 +19,7 @@ def checkin():
     connectors = create_connectors()
     pl = current_user
     conn = get_connector_by_id(connectors, pl.conn_type)
-    conn.set_token(pl.token)
+    conn.token_login(pl.token)
 
     # if this pl has not set an event id yet, redirect to chooseevent
     if pl.event_id is None:

@@ -35,7 +35,7 @@ def mutate():
     # get connector and setup
     connectors = create_connectors()
     conn = get_connector_by_id(connectors, pl.conn_type)
-    conn.set_token(pl.token)
+    conn.token_login(pl.token)
     conn.set_event(pl.event_id)
 
     # check-in/-out user

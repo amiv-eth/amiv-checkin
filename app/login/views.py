@@ -1,6 +1,6 @@
 # app/login/views.py
 
-from flask import flash, redirect, render_template, url_for, request, abort
+from flask import flash, redirect, render_template, url_for, request, abort, make_response
 from flask_login import login_required, login_user, logout_user, current_user
 import secrets
 
@@ -117,17 +117,16 @@ def chooseevent():
     connectors = create_connectors()
     pl = current_user
     conn = get_connector_by_id(connectors, pl.conn_type)
-    conn.set_token(pl.token)
+    conn.token_login(pl.token)
 
     # create form
     chooseeventform = ChooseEventForm()
-    try:
-        events = conn.get_next_events();
-        print(events)
-    except Exception as E:
-        print("Could not get next events.")
-        print(E)
-        abort(500)
+    #try:
+    events = conn.get_next_events();
+    print(events)
+    #except Exception as E:
+    #    print(E)
+    #    abort(make_response("Could not get next events.", 500))
 
     # create event list for drop-down menu
     elist = []

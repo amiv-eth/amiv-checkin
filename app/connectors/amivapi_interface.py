@@ -8,9 +8,6 @@ class AMIV_API_Interface:
         self.api_url = "https://amiv-api.ethz.ch"
         self.datetime_format = "%Y-%m-%dT%H:%M:%SZ"
 
-        self.human_string = "AMIV Events"
-        self.human_string = "amivapi_connector"
-
         self.token = ""
         self.auth_obj = ""
 
@@ -40,6 +37,13 @@ class AMIV_API_Interface:
         up_bound = up_bound.strftime(self.datetime_format)
         _range = '{"time_start":{"$gt":"'+low_bound+'","$lt":"'+up_bound+'"}}'
         r = requests.get(self.api_url + '/events?where=' + _range)
+
+
+        print('----------')
+        print(r.json())
+        print('----------')
+
+        
         if min(r.json()['total'], r.json()['max_results']) is 0:
             raise Exception("No Events found in the next 100 days")
         response = list()

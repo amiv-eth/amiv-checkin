@@ -29,10 +29,10 @@ class Dummy_Interface:
             {'id': '2', 'title': 'event2', 'spots': 62, 'signup_count': 42, 'time_start': '2017-12-02T19:02:00Z'},
             {'id': '3', 'title': 'event3', 'spots': 63, 'signup_count': 43, 'time_start': '2017-12-02T19:03:00Z'},
             {'id': '4', 'title': 'event4', 'spots': 64, 'signup_count': 44, 'time_start': '2017-12-02T19:04:00Z'},
-            {'id': '5', 'title': 'event1', 'spots': 65, 'signup_count': 45, 'time_start': '2017-12-02T19:01:00Z'},
-            {'id': '6', 'title': 'event2', 'spots': 66, 'signup_count': 46, 'time_start': '2017-12-02T19:02:00Z'},
-            {'id': '7', 'title': 'event3', 'spots': 67, 'signup_count': 47, 'time_start': '2017-12-02T19:03:00Z'},
-            {'id': '8', 'title': 'event4', 'spots': 68, 'signup_count': 48, 'time_start': '2017-12-02T19:04:00Z'}
+            {'id': '5', 'title': 'event5', 'spots': 65, 'signup_count': 45, 'time_start': '2017-12-02T19:01:00Z'},
+            {'id': '6', 'title': 'event6', 'spots': 66, 'signup_count': 46, 'time_start': '2017-12-02T19:02:00Z'},
+            {'id': '7', 'title': 'event7', 'spots': 67, 'signup_count': 47, 'time_start': '2017-12-02T19:03:00Z'},
+            {'id': '8', 'title': 'event8', 'spots': 68, 'signup_count': 48, 'time_start': '2017-12-02T19:04:00Z'}
         ]
         self.dummy_eventsignups = [
             #EID, UID, checkin flag
@@ -67,7 +67,7 @@ class Dummy_Interface:
                 return username+password # dummy token
         raise Exception('Invalid username or password.')
 
-    def set_token(self, token):
+    def token_login(self, token):
         """
         marcoep: instead of loggin in, we should also be able to provide this class
                  with an already saved token from a previous session
