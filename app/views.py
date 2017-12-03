@@ -6,9 +6,9 @@ from app import app
 
 @app.route('/')
 def index():
-    return render_template("index.html")
 
-@app.route('/about')
-def about():
-    return render_template("about.html")
+	if current_user.is_authenticated:
+		return redirect(url_for('checkin.checkin'))
+
+    return redirect(url_for('login.login'))
     

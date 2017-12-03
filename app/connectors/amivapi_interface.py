@@ -14,6 +14,9 @@ class AMIV_API_Interface:
         self.token = ""
         self.auth_obj = ""
 
+        self.human_string = "AMIV Events"
+        self.id_string = "conn_amivapi"
+
     def login(self, username, password):
         """ Log in the user to obtain usable token for requests """
         payload = {"user": str(username), "password": password}
