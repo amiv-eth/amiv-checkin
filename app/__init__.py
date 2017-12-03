@@ -16,7 +16,6 @@ db = SQLAlchemy()
 # get flask login manager
 login_manager = LoginManager()
 
-
 def create_app(config_name):
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_object(app_config[config_name])
@@ -40,6 +39,5 @@ def create_app(config_name):
 
     from .checkin import checkin_bp
     app.register_blueprint(checkin_bp)
-
 
     return app

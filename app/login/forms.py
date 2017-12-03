@@ -17,6 +17,7 @@ class CredentialsLoginForm(FlaskForm):
     """
     username = StringField('Username', validators=[DataRequired()])
     password = PasswordField('Password', validators=[DataRequired()])
+    backend = SelectField('Event Type')
     submit = SubmitField('Login with Credentials')
     method_Cred = HiddenField('Credentials')
     
@@ -24,5 +25,5 @@ class ChooseEventForm(FlaskForm):
     """
     Form to chose event for which you want to create the PresenceList
     """
-    choseevent = SelectField('Events', validators=[DataRequired()], choices=[('none','-- none --')]) 
+    chooseevent = SelectField('Events') 
     submit = SubmitField('Create Presence List for selected Event.')
