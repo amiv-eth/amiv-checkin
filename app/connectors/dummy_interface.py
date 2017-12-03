@@ -52,7 +52,7 @@ class Dummy_Interface:
         """
         self.token = token
 
-    def get_next_events(self, token):
+    def get_next_events(self):
         """ Fetch the upcoming events between today and tomorrow
 
         marcoep: This function should return a list of dicts.
@@ -72,7 +72,7 @@ class Dummy_Interface:
         """
         self.event_id = event_id
 
-    def get_signups_for_event(self, token):
+    def get_signups_for_event(self):
         """ Fetch the list of participants for a specific event
 
         marcoep: this function should return a list of dicts.
