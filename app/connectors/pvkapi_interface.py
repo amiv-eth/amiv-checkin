@@ -5,6 +5,9 @@ import requests
 class PVK_API_Interface:
     """ Interface class to fetch and update data through the PVK API """
     def __init__(self):
+
+        raise Exception("Do not use this class. It is not maintained.")
+
         self.amiv_api_url = "https://amiv-api.ethz.ch"
         self.api_url = ""  # TODO: Add URL of PVK API
         self.datetime_format = "%Y-%m-%dT%H:%M:%SZ"

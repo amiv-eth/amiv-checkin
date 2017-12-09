@@ -51,12 +51,13 @@ def checkin():
 
     # translate signups boolean to human readable info
     for s in signups:
-        if s['checked_in'] is None:
-            s['checked_in'] = '-'
-        elif s['checked_in']:
-            s['checked_in'] = 'IN'
-        else:
-            s['checked_in'] = 'OUT'
+        if 'checked_in' in s:
+            if s['checked_in'] is None:
+                s['checked_in'] = '-'
+            elif s['checked_in']:
+                s['checked_in'] = 'IN'
+            else:
+                s['checked_in'] = 'OUT'
 
     # load webpage
     return render_template('checkin/checkin.html', form=checkform, signups=signups, title='AMIV Check-In')

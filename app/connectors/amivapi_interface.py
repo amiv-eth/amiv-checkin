@@ -2,8 +2,6 @@ from datetime import datetime, timedelta
 import requests
 from math import ceil
 
-from pip._vendor.packaging.markers import _eval_op
-
 
 class AMIV_API_Interface:
     """ Interface class to fetch and update data through the AMIV API """
@@ -34,85 +32,92 @@ class AMIV_API_Interface:
         self.token = token
         self.auth_obj = requests.auth.HTTPBasicAuth(self.token, "")
 
+    def _api_get(self, url):
+        r = requests.get(self.api_url + url, auth=self.auth_obj)
+        if r.status_code != 200:
+            raise Exception('GET failed - URL:{} - HTTP {}'.format(r.url, r.status_code))
+        return r
+
     def get_next_events(self):
         """ Fetch the upcoming events between today and tomorrow """
-        low_bound = datetime.today() - timedelta(days=2)
-        low_bound = low_bound.strftime(self.datetime_format)
-        up_bound = datetime.today() + timedelta(days=100)
-        up_bound = up_bound.strftime(self.datetime_format)
-        _range = '{"time_start":{"$gt":"'+low_bound+'","$lt":"'+up_bound+'"}}'
-        r = requests.get(self.api_url + '/events?where=' + _range)
-        #r = requests.get(self.api_url + '/events')
+        # low_bound = datetime.today() - timedelta(days=2)
+        # low_bound = low_bound.strftime(self.datetime_format)
+        # up_bound = datetime.today() + timedelta(days=100)
+        # up_bound = up_bound.strftime(self.datetime_format)
+        # _range = '{"time_start":{"$gt":"'+low_bound+'","$lt":"'+up_bound+'"}}'
+        # r = self._api_get('/events?where=' + _range)
+        r = self._api_get('/events')
+        _events = [x for x in r.json()['_items']]
+
+        # get all events from the rest of the pages
         ntotal = r.json()['_meta']['total']
         npage = r.json()['_meta']['max_results']
         if min(ntotal, npage) is 0:
             raise Exception("No Events found in the next 100 days.")
 
-        # get all events from all pages
-        _events = list()
-        for p in range(1, ceil(ntotal/npage)):
-            r = requests.get(self.api_url + '/events?page={}&where={}'.format(str(p)), _range)
+        for p in range(2, int(ceil(ntotal/npage))+1):
+            #r = self._api_get('/events?page={}&where={}'.format(str(p), _range))
+            r = self._api_get('/events?page={}'.format(str(p)))
             _events.extend(r.json()['_items'])
-
-        print(_events)
 
         response = list()
         for event in _events:
-            # get all possible data:
 
-            _id = event['_id']
-
-            if 'title_en' in event:
-                title = event['title_en']
+            # assemble info for event
+            ev = dict()
+            ev['_id'] = event['_id']
+            if 'title_en' in event and event['title_en']:
+                ev['title'] = event['title_en']
             else:
-                title = event['title_de']
-
+                ev['title'] = event['title_de']
             if 'spots' in event:
-                spots = event['spots']
+                ev['spots'] = event['spots']
             else:
-                spots = "unlimited"
-
+                ev['spots'] = "unlimited"
             if 'signup_count' in event:
-                signup_count = event['signup_count']
-            else:
-                signup_count = ''
-
+                ev['signup_count'] = event['signup_count']
             if 'time_start' in event:
-                time_start = event['time_start']
-            else:
-                time_start = 'perm.'
+                ev['time_start'] = datetime.strptime(event['time_start'], self.datetime_format)
+            response.append(ev)
 
-            response.append({
-                             '_id': _id,
-                             'title': title,
-                             'spots': spots,
-                             'signup_count': signup_count,
-                             'time_start': time_start})
         return response
+
+    def set_event(self, event_id):
+        """ Set the event_id for this instance of the class """
+        self.event_id = event_id
 
     def get_signups_for_event(self):
         """ Fetch the list of participants for a specific event """
-        _filter = ('/eventsignups?where={"event":"%s"}&embedded={"user":1}'
-                   % self.event_id)
-        r = requests.get(self.api_url + _filter, auth=self.auth_obj)
-        if min(r.json()['total'], r.json()['max_results']) is 0:
-            raise Exception("No eventsignups found for this event")
+        r = self._api_get('/eventsignups?where={"event":"%s"}&embedded={"user":1}' % self.event_id)
+        _signups = [x for x in r.json()['_items']]
+
+        # get all signups from all pages
+        ntotal = r.json()['_meta']['total']
+        npage = r.json()['_meta']['max_results']
+
+        for p in range(2, int(ceil(ntotal / npage))+1):
+            r = self._api_get('/eventsignups?where={"event":"%s"}&embedded={"user":1}&page=%s' % (self.event_id, str(p)))
+            _signups.extend(r.json()['_items'])
+
         response = list()
-        for key, eventsignup in r.json().iteritems():
+        for eventsignup in _signups:
             user_info = eventsignup['user']
+            # translate non-existing value to None
+            if 'checked_in' in eventsignup:
+                cki = eventsignup['checked_in']
+            else:
+                cki = None
+            # assemble signup dict
             response.append({
                              'firstname': user_info['firstname'],
                              'lastname': user_info['lastname'],
                              'nethz': user_info['nethz'],
                              'email': user_info['email'],
-                             'checked_in': eventsignup['checked_in'],
+                             'checked_in': cki,
                              'legi': user_info['legi'],
                              '_id': user_info['_id']})
-        return r.json()
 
-    def set_event(self, event_id):
-        """ Set the event_id for this instance of the class """
-        self.event_id = event_id
+        return response
 
     def _get_userinfo_from_userid(self, u_id):
         """ Fetch the userinfos from the user_id """

@@ -33,7 +33,7 @@ def login():
     # fill form with connectors
     conn_select = []
     for c in connectors:
-        conn_select.append( (c.id_string,c.human_string) )
+        conn_select.append((c.id_string, c.human_string))
     credform.backend.choices = conn_select
 
     if request.method == 'POST':
@@ -43,11 +43,9 @@ def login():
                 # PIN form was submitted, try user login
                 
                 inputpin = pinform.pin.data
-                print("entered pin: {}".format(inputpin))
 
                 # get all presence lists with given PIN
                 presencelists = PresenceList.query.filter_by(pin=inputpin).all()
-                print("presencelists length: {}".format(len(presencelists)))
                 
                 if len(presencelists) > 1:
                     # we have a database error
@@ -129,10 +127,17 @@ def chooseevent():
     # create event list for drop-down menu
     elist = []
     for e in events:
-        elist.append((e['_id'], e['title']))
+        # format the event title to include spot numbers and start date
+        event_title = "{}".format(e['title'])
+        if 'signup_count' in e:
+            event_title = "{} - ({}/{})".format(event_title, e['signup_count'], e['spots'])
+        if 'time_start' in e:
+            event_title = "{} - {}".format(event_title, e['time_start'].strftime('%d.%m.%Y %H:%M'))
+        elist.append((e['_id'], event_title))
+    # assign data to dropdown
     chooseeventform.chooseevent.choices = elist
 
-    # check if we are on POST
+    # check if we are on POST to handle all replies
     if request.method == 'POST':
         if chooseeventform.validate_on_submit():
             # get event id string and find the corresponding event object
@@ -147,10 +152,7 @@ def chooseevent():
                 abort(400)
 
             # check if user already exists for event id
-            print(pl.conn_type)
-            print(ev['_id'])
             s = PresenceList.query.filter_by(conn_type=pl.conn_type, event_id=ev['_id']).all()
-            print(s)
             if len(s) > 0:
                 # we have already a pin registered for this event, renew token, show old pin, logout user, and redirect
                 s[0].token = pl.token
