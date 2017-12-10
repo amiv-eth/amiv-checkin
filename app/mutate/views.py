@@ -1,11 +1,11 @@
 # app/checkin/views.py
 
 from flask import request, abort, make_response
-from flask_login import login_required, login_user, logout_user
 
 from . import mutate_bp
 from ..models import PresenceList
 from ..connectors import create_connectors, get_connector_by_id
+
 
 @mutate_bp.route('/mutate', methods=['POST'])
 def mutate():
@@ -17,13 +17,13 @@ def mutate():
 
     try:
         pin = int(request.form['pin'])
-        checkmode = str(request.form['checkmode']).lower()
+        checkmode = str(request.form['checkmode']).strip().lower()
         if checkmode != 'in' and checkmode != 'out':
             raise Exception('invalid checkmode: {}'.format(checkmode))
         info = str(request.form['info'])
     except Exception as E:
         print(E)
-        abort(make_response('Malformed request.', 400))
+        abort(make_response('Malformed request. ({})'.format(str(E)), 400))
 
     # find PresenceList with pin
     pls = PresenceList.query.filter_by(pin=pin).all()
@@ -32,7 +32,7 @@ def mutate():
     else:
         pl = pls[0]
 
-    # get connector and setup
+    # get correct connector, login, and set respective event
     connectors = create_connectors()
     conn = get_connector_by_id(connectors, pl.conn_type)
     conn.token_login(pl.token)
