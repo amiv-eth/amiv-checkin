@@ -57,7 +57,7 @@ def login():
                         login_user(pl)
                         return redirect(url_for('checkin.checkin'))
 
-                flash('Invalid PIN.')
+                flash('Invalid PIN.', 'error')
                 
                     
         elif 'method_Cred' in request.values:
@@ -72,7 +72,7 @@ def login():
                 try: 
                     token = conn.login(un, pw)
                 except Exception as E:
-                    flash(str(E))
+                    flash(str(E), 'error')
                     return redirect(url_for('login.login'))
 
                 # credentials are valid, create new user! Create new pin and check if already set.
@@ -120,7 +120,7 @@ def chooseevent():
     try:
         events = conn.get_next_events()
     except Exception as E:
-        flash("Could not get next events: {}".format(E))
+        flash("Could not get next events: {}".format(E), 'error')
         logout_user()
         return redirect(url_for('login.login'))
 

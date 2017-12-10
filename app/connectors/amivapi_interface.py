@@ -102,11 +102,15 @@ class AMIV_API_Interface:
         response = list()
         for eventsignup in _signups:
             user_info = eventsignup['user']
-            # translate non-existing value to None
+            # translate non-existing value to None (these values are optional in API)
             if 'checked_in' in eventsignup:
                 cki = eventsignup['checked_in']
             else:
                 cki = None
+            if 'legi' in eventsignup:
+                legi = eventsignup['legi']
+            else:
+                legi = None
             # assemble signup dict
             response.append({
                              'firstname': user_info['firstname'],
@@ -114,92 +118,88 @@ class AMIV_API_Interface:
                              'nethz': user_info['nethz'],
                              'email': user_info['email'],
                              'checked_in': cki,
-                             'legi': user_info['legi'],
+                             'legi': legi,
                              '_id': user_info['_id']})
 
         return response
 
-    def _get_userinfo_from_userid(self, u_id):
-        """ Fetch the userinfos from the user_id """
-        r = requests.get(self.api_url + '/users/' + u_id)
-        return r.json()
-
-    def _get_userinfo_from_legi(self, legi):
-        """ Fetch the user_id from a legi number """
-        _filter = '/users?where={"legi":"%s"}' % legi
-        r = requests.get(self.api_url + _filter,
-                         auth=self.auth_obj)
-        if r.status_code is 200:
-            return r.json()
-        raise Exception("Error: No user found")
-
-    def _get_userinfo_from_nethz(self, nethz):
-        """ Fetch the user_id from a nethz username """
-        _filter = '/users?where={"nethz":"%s"}' % nethz
-        r = requests.get(self.api_url + _filter,
-                         auth=self.auth_obj)
-        if r.status_code is 200:
-            return r.json()
-        raise Exception("Error: No user found")
-
-    def _get_userinfo_from_email(self, email):
-        """ Fetch the user_id from a mail adress """
-        _filter = '/users?where={"email":"%s"}' % email
-        r = requests.get(self.api_url + _filter,
-                         auth=self.auth_obj)
-        if r.status_code is 200:
-            if len(r.json().keys()) is 1:
-                return r.json()
-        raise Exception("Error: Multiple entries found or no user found")
-
     def _get_userinfo_from_info(self, info):
         """ Choose the function to use to fetch the u_id """
+        info = info.strip().lower()  # get rid of whitespace and make everything lower letters
+        # decide on data-type:
         if '@' in info:
-            user_info = self._get_userinfo_from_email(info)
+            _filter = 'email'
         elif info.isalpha():
-            user_info = self._get_userinfo_from_nethz(info)
+            _filter = 'nethz'
         else:
-            if info[0] is 'S':
-                info.replace('S', '')
-            user_info = self._get_userinfo_from_legi(info)
-        return user_info
+            if info[0] is 's':
+                info.replace('s', '')
+            _filter = 'legi'
+        # formulate request
+        r = self._api_get('/users?where={"%s":"%s"}' % (_filter, info))
+        rj = r.json()
+        # check for multiple or none entries
+        if int(rj['_meta']['total']) > 1:
+            raise Exception("More than one user found with {}: {}.".format(_filter, info))
+        if int(rj['_meta']['total']) < 1:
+            raise Exception("No user found with {}: {}.".format(_filter, info))
+        # success! we found exactly one user with the described info. Return it.
+        return rj['_items'][0]
 
     def checkin_field(self, info):
         """ Check in a user to an event by flipping the checked_in value """
-        user_id = self._get_userid_from_info(info)['_id']
-        _filter = '?where={"user":"%s", "event":"%s"}' % user_id, self.event_id
-        r = requests.get(self.api_url + '/eventsignups' + _filter,
-                         auth=self.auth_obj)
-        if r.status_code != 200:
-            raise Exception("Error: Could not find eventsignup entry")
-        if r.json()['checked_in'] is True:
-            raise Exception("Error: User already checked in")
-        etag = r.json()['_etag']
-        url = self.api_url + '/eventsignups'
+        # find user according to info
+        user_id = self._get_userinfo_from_info(info)['_id']
+        # find the signup with the user
+        r = self._api_get('/eventsignups?where={"user":"%s", "event":"%s"}' % (user_id, self.event_id))
+        rj = r.json()
+        # check numbers of signups
+        if int(rj['_meta']['total']) > 1:
+            raise Exception("More than one signup found for user: {}.".format(info))
+        if int(rj['_meta']['total']) < 1:
+            raise Exception("User {} not signed-up for event.".format(info))
+        # found exactly one signup
+        rj = rj['_items'][0]
+        if ('checked_in' in rj) and (rj['checked_in'] is True):
+            raise Exception("User {} already checked in.".format(info))
+        # create PATCH to check-in user
+        esu_id = rj['_id']
+        etag = rj['_etag']
+        url = self.api_url + '/eventsignups/%s' % esu_id  # we must target specific eventsignup with id
         header = {'If-Match': etag}
         payload = {"checked_in": "True"}
-        r = requests.patch(url + _filter,
-                           auth=self.auth_obj,
-                           headers=header,
-                           data=payload)
-        return r.status_code == 200
+        r = requests.patch(url, auth=self.auth_obj, headers=header, data=payload)
+        if r.status_code != 200:
+            raise Exception('Could not check-in user: API responded {}.'.format(r.status_code))
+        return True
 
     def checkout_field(self, info):
-        """ Check in a user to an event by flipping the checked_in value """
-        user_id = self._get_userid_from_info(info)
-        _filter = '?where={"user":"%s", "event":"%s"}' % user_id, self.event_id
-        r = requests.get(self.api_url + '/eventsignups' + _filter,
-                         auth=self.auth_obj)
-        if r.status_code != 200:
-            raise Exception("Error: Could not find the eventsignup entry")
-        if r.json()['checked_in'] is False:
-            raise Exception("Error: User already checked out or absent")
-        etag = r.json()['_etag']
-        url = self.api_url + '/eventsignups'
+        """ Check out a user to an event by flipping the checked_in value """
+        # find user according to info
+        user_id = self._get_userinfo_from_info(info)['_id']
+        # find the singup with the user
+        r = self._api_get('/eventsignups?where={"user":"%s", "event":"%s"}' % (user_id, self.event_id))
+        rj = r.json()
+        # check numbers of signups
+        if int(rj['_meta']['total']) > 1:
+            raise Exception("More than one signup found for user: {}.".format(info))
+        if int(rj['_meta']['total']) < 1:
+            raise Exception("User {} not signed-up for event.".format(info))
+        # found exactly one signup
+        rj = rj['_items'][0]
+        if 'checked_in' not in rj:
+            raise Exception("User {} never checked-in before.".format(info))
+        if rj['checked_in'] is None:
+            raise Exception("User {} never checked-in before.".format(info))
+        if rj['checked_in'] is False:
+            raise Exception("User {} already checked out.".format(info))
+        # create PATCH to check-out user
+        esu_id = rj['_id']
+        etag = rj['_etag']
+        url = self.api_url + '/eventsignups/%s' % esu_id  # we must target specific eventsignup with id
         header = {'If-Match': etag}
         payload = {"checked_in": "False"}
-        r = requests.patch(url + _filter,
-                           auth=self.auth_obj,
-                           headers=header,
-                           data=payload)
-        return r.status_code == 200
+        r = requests.patch(url, auth=self.auth_obj, headers=header, data=payload)
+        if r.status_code != 200:
+            raise Exception('Could not check-out user: API responded {}.'.format(r.status_code))
+        return True

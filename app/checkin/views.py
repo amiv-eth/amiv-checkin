@@ -28,7 +28,6 @@ def checkin():
     # event is set, setup connector
     conn.set_event(pl.event_id)
 
-
     # create form (do POST check here)
     checkform = CheckForm()
     if request.method == 'POST':
@@ -39,25 +38,33 @@ def checkin():
             try:
                 if checkmode == 'in':
                     conn.checkin_field(info)
-                    flash('Checked-IN!')
+                    flash('User {} Checked-IN!'.format(info))
                 else:
                     conn.checkout_field(info)
-                    flash('Checked-OUT!')
+                    flash('User {} Checked-OUT!'.format(info))
             except Exception as E:
-                flash('Error: '+str(E))
+                flash('Error: '+str(E), 'error')
 
     # get current signups
-    signups = conn.get_signups_for_event()
+    try:
+        signups = conn.get_signups_for_event()
+    except Exception as E:
+        flash('Could not get signups for event: {}'.format(str(E)), 'error')
+        logout_user()
+        return redirect(url_for('login.login'))
 
-    # translate signups boolean to human readable info
+    # output values
     for s in signups:
-        if 'checked_in' in s:
-            if s['checked_in'] is None:
-                s['checked_in'] = '-'
-            elif s['checked_in']:
-                s['checked_in'] = 'IN'
-            else:
-                s['checked_in'] = 'OUT'
+        # signups is boolean, make it human readable
+        if s['checked_in'] is None:
+            s['checked_in'] = '-'
+        elif s['checked_in']:
+            s['checked_in'] = 'IN'
+        else:
+            s['checked_in'] = 'OUT'
+        # legi could be None
+        if s['legi'] is None:
+            s['legi'] = 'unknown'
 
     # load webpage
     return render_template('checkin/checkin.html', form=checkform, signups=signups, title='AMIV Check-In')
