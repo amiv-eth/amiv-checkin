@@ -10,6 +10,7 @@ from .. import db
 from ..models import PresenceList
 from ..connectors import create_connectors, get_connector_by_id
 
+
 @login_bp.route('/')
 def home():
     return redirect(url_for('login.login'))

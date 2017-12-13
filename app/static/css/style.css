@@ -33,6 +33,14 @@ p.copyright {
     border-color: #aec251;
 }
 
+.alert-danger {
+    width: 50%;
+    margin: auto;
+    color: #a94442;
+    background-color: #f2dede;
+    border-color: #ebccd1;
+}
+
 .btn-default {
     border-color: #aec251;
     color: #aec251;
@@ -44,7 +52,13 @@ p.copyright {
 
 .center {
     margin: auto;
-    width: 50%;
+    width: 70%;
+    padding: 10px;
+}
+
+.center-narrow {
+    margin: auto;
+    width: 40%;
     padding: 10px;
 }
 

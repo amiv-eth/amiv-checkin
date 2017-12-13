@@ -27,7 +27,7 @@
     <br/>
     {{ utils.flashed_messages() }}
     <br/>
-    {{ wtf.quick_form(form, form_type='horizontal') }}
+    {{ wtf.quick_form(form, form_type='horizontal', horizontal_columns=('md', 2, 10)) }}
     <hr class="intro-divider">
     <table class="table table-striped table-bordered">
       <thead>
@@ -54,7 +54,5 @@
   </div>
 </div>
 {% endblock %}
-
-
 
 
