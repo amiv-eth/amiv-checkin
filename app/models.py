@@ -4,6 +4,7 @@ from flask_login import UserMixin
 
 from app import db, login_manager
 
+
 class PresenceList(UserMixin, db.Model):
     """
     Create a Presence List table
@@ -19,8 +20,6 @@ class PresenceList(UserMixin, db.Model):
     token = db.Column(db.String(128))
     event_id = db.Column(db.String(128))
 
-    def __repr__(self):
-        return '<PresenceList: {}>'.format(self.id, self.pin, self.token, self.conn_type)
 
 # Set up user_loader
 @login_manager.user_loader

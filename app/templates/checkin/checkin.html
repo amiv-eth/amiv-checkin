@@ -32,6 +32,22 @@
     <table class="table table-striped table-bordered">
       <thead>
         <tr>
+          <th colspan="2"> Statistics </th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for s in statistics %}
+        <tr>
+          <td width="85%"> {{ s }} </td>
+          <td width="15%"> {{ statistics[s] }} </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    <hr class="intro-divider">
+    <table class="table table-striped table-bordered">
+      <thead>
+        <tr>
           <th width="25%"> Name </th>
           <th width="15%"> nethz </th>
           <th width="15%"> Legi </th>
@@ -54,5 +70,3 @@
   </div>
 </div>
 {% endblock %}
-
-

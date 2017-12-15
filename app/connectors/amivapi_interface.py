@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 import requests
 from math import ceil
+from copy import deepcopy
 
 
 class AMIV_API_Interface:
@@ -12,6 +13,8 @@ class AMIV_API_Interface:
         self.token = ""
         self.auth_obj = ""
         self.event_id = ""
+
+        self.last_signups = None
 
         self.human_string = "AMIV Events"
         self.id_string = "conn_amivapi"
@@ -119,9 +122,25 @@ class AMIV_API_Interface:
                              'email': user_info['email'],
                              'checked_in': cki,
                              'legi': legi,
+                             'membership': user_info['membership'],
                              '_id': user_info['_id']})
 
+        # save this for later reference by get_statistics
+        self.last_signups = deepcopy(response)
+
         return response
+
+    def get_statistics(self):
+        """ return the statistics string for the last fetched  """
+        if self.last_signups is None:
+            return {}
+
+        stats = {'Total Signups': len(self.last_signups), 'Current Attendance': 0}
+        for u in self.last_signups:
+            if u['checked_in'] is True:
+                stats['Current Attendance'] = stats['Current Attendance'] + 1
+
+        return stats
 
     def _get_userinfo_from_info(self, info):
         """ Choose the function to use to fetch the u_id """

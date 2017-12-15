@@ -100,7 +100,7 @@ def login():
             abort(500)
 
     # load login template
-    return render_template('login/login.html', pinform=pinform, credform=credform, title='Login')
+    return make_response(render_template('login/login.html', pinform=pinform, credform=credform, title='Login'))
 
 
 @login_bp.route('/chooseevent', methods=['GET','POST'])
@@ -173,7 +173,7 @@ def chooseevent():
             return redirect(url_for('checkin.checkin'))
 
     # on GET, render page
-    return render_template('login/chooseevent.html', form=chooseeventform, title='Choose Event')
+    return make_response(render_template('login/chooseevent.html', form=chooseeventform, title='Choose Event'))
 
 
 @login_bp.route('/logout')
