@@ -1,6 +1,6 @@
 # app/checkin/views.py
 
-from flask import flash, redirect, render_template, url_for, request, make_response
+from flask import flash, redirect, render_template, url_for, request, make_response, abort, jsonify
 from flask_login import login_required, logout_user, current_user
 
 from . import checkin_bp
@@ -12,8 +12,8 @@ from ..connectors import create_connectors, get_connector_by_id
 @login_required
 def checkin():
     """
-    Handle requests to the /register route
-    Add an employee to the database through the registration form
+    Main Webpage for all the signups. Also takes requests
+    from the manual check-in / check-out form.
     """
 
     # get connector
@@ -78,3 +78,41 @@ def checkin():
                                          signups=signups,
                                          statistics=stats,
                                          title='AMIV Check-In'))
+
+
+@checkin_bp.route('/checkin_update_data')
+def checkin_update_data():
+    """
+    Delivers the table contents on the webpage.
+    """
+
+    # get current user
+    if not current_user.is_authenticated:
+        abort(401)
+
+    # get connector
+    connectors = create_connectors()
+    pl = current_user
+    conn = get_connector_by_id(connectors, pl.conn_type)
+    conn.token_login(pl.token)
+
+    if pl.event_id is None:
+        abort(make_response('No registered event for this PIN.', 400))
+
+    # event is set, setup connector
+    conn.set_event(pl.event_id)
+
+    # get current signups
+    try:
+        signups = conn.get_signups_for_event()
+    except Exception as E:
+        abort(make_response('Error with API access: {:s}'.format(E), 502))
+
+    # fetch statistics
+    stats = conn.get_statistics()
+    statsl = list()
+    for k in stats:
+        statsl.append({'key': k, 'value': stats[k]})
+
+    j = {'signups': signups, 'statistics': statsl}
+    return make_response(jsonify(j))

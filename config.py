@@ -16,6 +16,7 @@ class DevelopmentConfig(Config):
     SQLALCHEMY_ECHO = True
     TESTING = False
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    TEMPLATES_AUTO_RELOAD = True
 
 class ProductionConfig(Config):
     """

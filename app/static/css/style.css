@@ -25,17 +25,18 @@ p.copyright {
     margin: 15px 0 0;
 }
 
-.alert-info {
-    width: 50%;
+.alert {
+    width: 70%;
     margin: auto;
+}
+
+.alert-info {
     color: #687430;
     background-color: #e6ecca;
     border-color: #aec251;
 }
 
 .alert-danger {
-    width: 50%;
-    margin: auto;
     color: #a94442;
     background-color: #f2dede;
     border-color: #ebccd1;
