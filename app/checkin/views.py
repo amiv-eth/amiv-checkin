@@ -5,6 +5,7 @@ from flask_login import login_required, logout_user, current_user
 
 from . import checkin_bp
 from .forms import CheckForm
+from ..models import PresenceList
 from ..connectors import create_connectors, get_connector_by_id
 
 
@@ -72,11 +73,21 @@ def checkin():
     # fetch statistics
     stats = conn.get_statistics()
 
+    # fetch title and description
+    evobj = conn.get_event()
+    event_title = evobj['title']
+    if 'time_start' in evobj:
+        event_desc = evobj['time_start'].strftime('%d.%m.%Y %H:%M')
+    else:
+        event_desc = ""
+
     # load webpage
     return make_response(render_template('checkin/checkin.html',
                                          form=checkform,
                                          signups=signups,
                                          statistics=stats,
+                                         event_title=event_title,
+                                         event_desc=event_desc,
                                          title='AMIV Check-In'))
 
 
@@ -86,14 +97,23 @@ def checkin_update_data():
     Delivers the table contents on the webpage.
     """
 
-    # get current user
-    if not current_user.is_authenticated:
-        abort(401)
+    # check if pin is supplied
+    pin = request.headers.get('pin')
+    if pin is None:
+        # if no pin is supplied, check if we are logged in
+        if not current_user.is_authenticated:
+            abort(401)
+        pl = current_user
+    else:
+        # pin supplied, find current user via database
+        pls = PresenceList.query.filter_by(pin=pin).all()
+        if len(pls) != 1:
+            abort(make_response('PIN invalid.', 403))
+        else:
+            pl = pls[0]
 
-    # get connector
-    connectors = create_connectors()
-    pl = current_user
-    conn = get_connector_by_id(connectors, pl.conn_type)
+    # find appropriate connector
+    conn = get_connector_by_id(create_connectors(), pl.conn_type)
     conn.token_login(pl.token)
 
     if pl.event_id is None:

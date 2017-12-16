@@ -28,7 +28,7 @@ def mutate():
     # find PresenceList with pin
     pls = PresenceList.query.filter_by(pin=pin).all()
     if len(pls) != 1:
-        abort(make_response('PIN invalid.', 403))
+        abort(make_response('PIN invalid.', 401))
     else:
         pl = pls[0]
 

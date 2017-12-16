@@ -35,10 +35,15 @@
 
   <div class="content-section"><br/>
 
+    <h1>{{ event_title }}</h1>
+    <h3>{{ event_desc }}</h3>
+
     {{ utils.flashed_messages(container=False) }}<br/>
 
-    <div id="sync_warning" class="alert alert-warning" style="display:none">
-      <strong>Warning!</strong> Could not fetch new data from server. List might be outdated.
+    <div id="sync_warning" style="display:none">
+      <div class="alert alert-warning">
+        <strong>Warning!</strong> Could not fetch new data from server. List might be outdated.
+      </div><br/>
     </div>
 
     {{ wtf.quick_form(form, form_type='horizontal', horizontal_columns=('md', 2, 10)) }}

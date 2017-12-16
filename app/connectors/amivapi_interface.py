@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 import requests
 from math import ceil
 from copy import deepcopy
+from flask import current_app as app
 
 
 class AMIV_API_Interface:
@@ -41,15 +42,35 @@ class AMIV_API_Interface:
             raise Exception('GET failed - URL:{} - HTTP {}'.format(r.url, r.status_code))
         return r
 
+    def _clean_event_obj(self, raw_event):
+        """ Re-format the event object from the API to easier, internal representation """
+        ev = dict()
+        ev['_id'] = raw_event['_id']
+        if 'title_en' in raw_event and raw_event['title_en']:
+            ev['title'] = raw_event['title_en']
+        else:
+            ev['title'] = raw_event['title_de']
+        if raw_event['spots'] == 0:
+            ev['spots'] = 'unlimited'
+        else:
+            ev['spots'] = raw_event['spots']
+        if 'signup_count' in raw_event:
+            ev['signup_count'] = raw_event['signup_count']
+        if 'time_start' in raw_event:
+            ev['time_start'] = datetime.strptime(raw_event['time_start'], self.datetime_format)
+        return ev
+
     def get_next_events(self):
         """ Fetch the upcoming events between today and tomorrow """
-        # low_bound = datetime.today() - timedelta(days=2)
-        # low_bound = low_bound.strftime(self.datetime_format)
-        # up_bound = datetime.today() + timedelta(days=100)
-        # up_bound = up_bound.strftime(self.datetime_format)
-        # _range = '{"time_start":{"$gt":"'+low_bound+'","$lt":"'+up_bound+'"}}'
-        # r = self._api_get('/events?where=' + _range)
-        r = self._api_get('/events')
+        if (app is not None) and (app.debug is False):
+            low_bound = datetime.today() - timedelta(days=2)
+            low_bound = low_bound.strftime(self.datetime_format)
+            up_bound = datetime.today() + timedelta(days=100)
+            up_bound = up_bound.strftime(self.datetime_format)
+            _range = '{"time_start":{"$gt":"'+low_bound+'","$lt":"'+up_bound+'"}, "spots":{"$gte":0}}'
+        else:
+            _range = '{"spots":{"$gte":0}}'
+        r = self._api_get('/events?where=' + _range)
         _events = [x for x in r.json()['_items']]
 
         # get all events from the rest of the pages
@@ -59,35 +80,23 @@ class AMIV_API_Interface:
             raise Exception("No Events found in the next 100 days.")
 
         for p in range(2, int(ceil(ntotal/npage))+1):
-            #r = self._api_get('/events?page={}&where={}'.format(str(p), _range))
-            r = self._api_get('/events?page={}'.format(str(p)))
+            r = self._api_get('/events?page={}&where={}'.format(str(p), _range))
             _events.extend(r.json()['_items'])
 
         response = list()
         for event in _events:
-
-            # assemble info for event
-            ev = dict()
-            ev['_id'] = event['_id']
-            if 'title_en' in event and event['title_en']:
-                ev['title'] = event['title_en']
-            else:
-                ev['title'] = event['title_de']
-            if 'spots' in event:
-                ev['spots'] = event['spots']
-            else:
-                ev['spots'] = "unlimited"
-            if 'signup_count' in event:
-                ev['signup_count'] = event['signup_count']
-            if 'time_start' in event:
-                ev['time_start'] = datetime.strptime(event['time_start'], self.datetime_format)
-            response.append(ev)
+            response.append(self._clean_event_obj(event))
 
         return response
 
     def set_event(self, event_id):
         """ Set the event_id for this instance of the class """
         self.event_id = event_id
+
+    def get_event(self):
+        """ Return the event object for the set event_id """
+        r = self._api_get('/events/{}'.format(self.event_id))
+        return self._clean_event_obj(r.json())
 
     def get_signups_for_event(self):
         """ Fetch the list of participants for a specific event """
