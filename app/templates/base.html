@@ -6,9 +6,12 @@
     <title>{{ title }} | AMIV</title>
     <link href="{{ url_for('static', filename='css/bootstrap.3.3.7.min.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <script src="{{ url_for('static', filename='js/jquery.3.2.1.min.js') }}"></script>
     <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
 </head>
 <body>
+    {% block javascript %}
+    {% endblock %}
     <div class="wrapper">
       {% block body %}
       {% endblock %}
