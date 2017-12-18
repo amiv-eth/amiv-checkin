@@ -16,7 +16,7 @@ def home():
     return redirect(url_for('login.login'))
 
 
-@login_bp.route('/login', methods=['GET','POST'])
+@login_bp.route('/login', methods=['GET', 'POST'])
 def login():
     """
     Handle requests to the /login route

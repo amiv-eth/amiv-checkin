@@ -1,11 +1,13 @@
 # config.py
 
+
 class Config(object):
     """
     Common configurations
     """
 
     # Put any configurations here that are common across all environments
+
 
 class DevelopmentConfig(Config):
     """
@@ -18,6 +20,7 @@ class DevelopmentConfig(Config):
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     TEMPLATES_AUTO_RELOAD = True
 
+
 class ProductionConfig(Config):
     """
     Production configurations
@@ -26,6 +29,7 @@ class ProductionConfig(Config):
     DEBUG = False
     TESTING = False
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+
 
 app_config = {
     'development': DevelopmentConfig,
