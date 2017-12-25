@@ -1,7 +1,9 @@
 
+# global imports
 from flask_wtf import FlaskForm
-from wtforms import PasswordField, StringField, SubmitField, IntegerField, SelectField, HiddenField
+from wtforms import PasswordField, StringField, SubmitField, IntegerField, SelectField, HiddenField, TextAreaField
 from wtforms.validators import DataRequired
+
 
 class PinLoginForm(FlaskForm):
     """
@@ -10,6 +12,7 @@ class PinLoginForm(FlaskForm):
     pin = IntegerField('PIN', validators=[DataRequired()])
     submit = SubmitField('Login with PIN')
     method_PIN = HiddenField('PIN')
+
 
 class CredentialsLoginForm(FlaskForm):
     """
@@ -20,10 +23,11 @@ class CredentialsLoginForm(FlaskForm):
     backend = SelectField('Event Type')
     submit = SubmitField('Login with Credentials')
     method_Cred = HiddenField('Credentials')
-    
+
+
 class ChooseEventForm(FlaskForm):
     """
     Form to chose event for which you want to create the PresenceList
     """
     chooseevent = SelectField('Events') 
-    submit = SubmitField('Create Presence List for selected Event.')
+    submit = SubmitField('Create Attendance Tracker for selected Event.')

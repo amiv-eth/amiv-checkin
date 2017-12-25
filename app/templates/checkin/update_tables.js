@@ -11,7 +11,7 @@ function beautify_legi(rawlegi) {
 function beautify_checkin(rawchecked_in) {
     if (rawchecked_in == null) {
         checked_in = "-";
-    } else if(rawchecked_in == true) {
+    } else if(rawchecked_in === true) {
         checked_in = "IN";
     } else {
         checked_in = "OUT";

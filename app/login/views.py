@@ -42,7 +42,6 @@ def login():
             if pinform.validate_on_submit():
                 
                 # PIN form was submitted, try user login
-                
                 inputpin = pinform.pin.data
 
                 # get all presence lists with given PIN
@@ -59,7 +58,6 @@ def login():
                         return redirect(url_for('checkin.checkin'))
 
                 flash('Invalid PIN.', 'error')
-                
                     
         elif 'method_Cred' in request.values:
             if credform.validate_on_submit():
@@ -80,7 +78,7 @@ def login():
                 retrycnt = 1000
                 while retrycnt > 0:
                     # create secure new random pin
-                    pin = 100000 + secrets.randbelow(900000)
+                    pin = 10000000 + secrets.randbelow(90000000)
                     if len(PresenceList.query.filter_by(pin=pin).all()) == 0:
                         break
                     retrycnt = retrycnt-1
@@ -103,7 +101,7 @@ def login():
     return make_response(render_template('login/login.html', pinform=pinform, credform=credform, title='Login'))
 
 
-@login_bp.route('/chooseevent', methods=['GET','POST'])
+@login_bp.route('/chooseevent', methods=['GET', 'POST'])
 @login_required
 def chooseevent():
     """
@@ -131,7 +129,8 @@ def chooseevent():
         # format the event title to include spot numbers and start date
         event_title = "{}".format(e['title'])
         if 'signup_count' in e:
-            event_title = "{} - ({}/{})".format(event_title, e['signup_count'], e['spots'])
+            spots = 'unlimited' if e['spots'] == 0 else e['spots']
+            event_title = "{} - ({}/{})".format(event_title, e['signup_count'], spots)
         if 'time_start' in e:
             event_title = "{} - {}".format(event_title, e['time_start'].strftime('%d.%m.%Y %H:%M'))
         elist.append((e['_id'], event_title))
@@ -139,41 +138,52 @@ def chooseevent():
     chooseeventform.chooseevent.choices = elist
 
     # check if we are on POST to handle all replies
-    if request.method == 'POST':
-        if chooseeventform.validate_on_submit():
-            # get event id string and find the corresponding event object
-            ev_id_string = chooseeventform.chooseevent.data
-            ev = None
-            for eidx in range(len(events)):
-                if events[eidx]['_id'] == ev_id_string:
-                    ev = events[eidx]
-                    break
-            if ev is None:
-                # user submitted non-existing event id
-                abort(400)
+    if chooseeventform.validate_on_submit():
+        # get event id string and find the corresponding event object
+        ev_id_string = chooseeventform.chooseevent.data
+        ev = None
+        for eidx in range(len(events)):
+            if events[eidx]['_id'] == ev_id_string:
+                ev = events[eidx]
+                break
+        if ev is None:
+            # user submitted non-existing event id
+            abort(400)
 
-            # check if user already exists for event id
-            s = PresenceList.query.filter_by(conn_type=pl.conn_type, event_id=ev['_id']).all()
-            if len(s) > 0:
-                # we have already a pin registered for this event, renew token, show old pin, logout user, and redirect
-                s[0].token = pl.token
-                pin_to_remove = pl.pin
-                existing_pin = s[0].pin
-                logout_user()
-                # delete wrongly created PresenceList from database
-                s = PresenceList.query.filter_by(pin=pin_to_remove).one()
-                db.session.delete(s)
-                db.session.commit()
-                flash('PIN already exists for this event! Use PIN {} to login.'.format(existing_pin))
-                return redirect(url_for('login.login'))
-
-            # ok, new event chosen. Set event_id in current PresenceList and go further
-            pl.event_id = ev['_id']
+        # check if user already exists for event id
+        s = PresenceList.query.filter_by(conn_type=pl.conn_type, event_id=ev['_id']).all()
+        if len(s) > 0:
+            # we have already a pin registered for this event, renew token, show old pin, logout user, and redirect
+            s[0].token = pl.token
+            pin_to_remove = pl.pin
+            existing_pin = s[0].pin
+            logout_user()
+            # delete wrongly created PresenceList from database
+            s = PresenceList.query.filter_by(pin=pin_to_remove).one()
+            db.session.delete(s)
             db.session.commit()
-            return redirect(url_for('checkin.checkin'))
+            flash('PIN already exists for this event! Use PIN {} to login.'.format(existing_pin))
+            return redirect(url_for('login.login'))
+
+        # ok, new event chosen. Set event_id in current PresenceList and go further
+        pl.event_id = ev['_id']
+        db.session.commit()
+        return redirect(url_for('checkin.checkin'))
+
+    # check if we are running on GVs:
+    if conn.id_string == 'conn_gvtool':
+        # when using the GV tool connector,
+        # we allow the user to create a new gv
+        show_new = True
+    else:
+        show_new = False
 
     # on GET, render page
-    return make_response(render_template('login/chooseevent.html', form=chooseeventform, title='Choose Event'))
+    return make_response(render_template('login/chooseevent.html',
+                                         events_form=chooseeventform,
+                                         title='Choose Event',
+                                         allow_create_new=show_new
+                                         ))
 
 
 @login_bp.route('/logout')
@@ -184,6 +194,28 @@ def logout():
     """
     logout_user()
     flash('You have successfully been logged out.')
+
+    # redirect to the login page
+    return redirect(url_for('login.login'))
+
+
+@login_bp.route('/logout_and_delete_pin')
+@login_required
+def logout_and_delete_pin():
+    """
+    Handle requests to the /logout_and_delete_pin route
+    """
+    s = PresenceList.query.filter_by(pin=current_user.pin).all()
+    if len(s) > 0:
+        pin_to_remove = current_user.pin
+        logout_user()
+        # delete wrongly created PresenceList from database
+        s = PresenceList.query.filter_by(pin=pin_to_remove).one()
+        db.session.delete(s)
+        db.session.commit()
+    else:
+        # should never happen
+        logout_user()
 
     # redirect to the login page
     return redirect(url_for('login.login'))

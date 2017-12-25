@@ -81,9 +81,10 @@ class Dummy_Interface:
         Every dict represents one event and has the following keys:
         '_id'            - the event id, string(128)
         'title'         - the human readable title of the event, string(128)
-        'spots'         - how many sign-up spots are there, integer
+        'spots'         - how many sign-up spots are there, integer (0 for infinite)
         'signup_count'  - how many people have signed up, integer
-        'time_start'    - time when the event will start, YYYY-MM-DDTHH:mm:ssZ like string
+        'time_start'    - time when the event will start, datetime
+        'description'   - description of the event, string(10000)
         """
         return self.dummy_events
 

@@ -19,6 +19,7 @@ class PresenceList(UserMixin, db.Model):
     pin = db.Column(db.Integer, index=True, unique=True)
     token = db.Column(db.String(128))
     event_id = db.Column(db.String(128))
+    event_ended = db.Column(db.Boolean, default=False, nullable=False)
 
 
 # Set up user_loader

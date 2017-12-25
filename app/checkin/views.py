@@ -34,20 +34,19 @@ def checkin():
     checkform = CheckForm()
 
     # check form submission
-    if request.method == 'POST':
-        if checkform.validate_on_submit():
-            checkmode = checkform.checkmode.data
-            info = checkform.datainput.data
+    if checkform.validate_on_submit():
+        checkmode = checkform.checkmode.data
+        info = checkform.datainput.data
 
-            try:
-                if checkmode == 'in':
-                    conn.checkin_field(info)
-                    flash('User {} Checked-IN!'.format(info))
-                else:
-                    conn.checkout_field(info)
-                    flash('User {} Checked-OUT!'.format(info))
-            except Exception as E:
-                flash('Error: '+str(E), 'error')
+        try:
+            if checkmode == 'in':
+                conn.checkin_field(info)
+                flash('User {} Checked-IN!'.format(info))
+            else:
+                conn.checkout_field(info)
+                flash('User {} Checked-OUT!'.format(info))
+        except Exception as E:
+            flash('Error: '+str(E), 'error')
 
     # get current signups
     try:
@@ -77,7 +76,11 @@ def checkin():
     evobj = conn.get_event()
     event_title = evobj['title']
     if 'time_start' in evobj:
-        event_desc = evobj['time_start'].strftime('%d.%m.%Y %H:%M')
+        event_start = evobj['time_start'].strftime('%d.%m.%Y %H:%M')
+    else:
+        event_start = ""
+    if 'description' in evobj:
+        event_desc = evobj['description']
     else:
         event_desc = ""
 
@@ -87,6 +90,7 @@ def checkin():
                                          signups=signups,
                                          statistics=stats,
                                          event_title=event_title,
+                                         event_start=event_start,
                                          event_desc=event_desc,
                                          title='AMIV Check-In'))
 
@@ -108,7 +112,7 @@ def checkin_update_data():
         # pin supplied, find current user via database
         pls = PresenceList.query.filter_by(pin=pin).all()
         if len(pls) != 1:
-            abort(make_response('PIN invalid.', 403))
+            abort(make_response('PIN invalid.', 401))
         else:
             pl = pls[0]
 

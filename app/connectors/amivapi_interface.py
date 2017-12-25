@@ -45,22 +45,45 @@ class AMIV_API_Interface:
     def _clean_event_obj(self, raw_event):
         """ Re-format the event object from the API to easier, internal representation """
         ev = dict()
-        ev['_id'] = raw_event['_id']
+        ev['_id'] = str(raw_event['_id'])
         if 'title_en' in raw_event and raw_event['title_en']:
             ev['title'] = raw_event['title_en']
         else:
             ev['title'] = raw_event['title_de']
-        if raw_event['spots'] == 0:
-            ev['spots'] = 'unlimited'
-        else:
-            ev['spots'] = raw_event['spots']
+        ev['spots'] = raw_event['spots']
         if 'signup_count' in raw_event:
             ev['signup_count'] = raw_event['signup_count']
         if 'time_start' in raw_event:
             ev['time_start'] = datetime.strptime(raw_event['time_start'], self.datetime_format)
+        if 'description_en' in raw_event and raw_event['description_en']:
+            ev['description'] = raw_event['description_en']
+        else:
+            ev['description'] = raw_event['description_de']
         return ev
 
-    def get_next_events(self):
+    def _clean_signup_obj(self, raw_signup):
+        user_info = raw_signup['user']
+        # translate non-existing value to None (these values are optional in API)
+        if 'checked_in' in raw_signup:
+            cki = raw_signup['checked_in']
+        else:
+            cki = None
+        if 'legi' in user_info:
+            legi = user_info['legi']
+        else:
+            legi = None
+        # assemble signup dict
+        return {
+            'firstname': user_info['firstname'],
+            'lastname': user_info['lastname'],
+            'nethz': user_info['nethz'],
+            'email': user_info['email'],
+            'checked_in': cki,
+            'legi': legi,
+            'membership': user_info['membership'],
+            '_id': user_info['_id']}
+
+    def get_next_events(self, filter_resp=True):
         """ Fetch the upcoming events between today and tomorrow """
         if (app is not None) and (app.debug is False):
             low_bound = datetime.today() - timedelta(days=2)
@@ -69,6 +92,7 @@ class AMIV_API_Interface:
             up_bound = up_bound.strftime(self.datetime_format)
             _range = '{"time_start":{"$gt":"'+low_bound+'","$lt":"'+up_bound+'"}, "spots":{"$gte":0}}'
         else:
+            # debug case: do not filter for time, just display all
             _range = '{"spots":{"$gte":0}}'
         r = self._api_get('/events?where=' + _range)
         _events = [x for x in r.json()['_items']]
@@ -83,11 +107,10 @@ class AMIV_API_Interface:
             r = self._api_get('/events?page={}&where={}'.format(str(p), _range))
             _events.extend(r.json()['_items'])
 
-        response = list()
-        for event in _events:
-            response.append(self._clean_event_obj(event))
-
-        return response
+        if filter_resp:
+            return [self._clean_event_obj(e) for e in _events]
+        else:
+            return _events
 
     def set_event(self, event_id):
         """ Set the event_id for this instance of the class """
@@ -113,26 +136,7 @@ class AMIV_API_Interface:
 
         response = list()
         for eventsignup in _signups:
-            user_info = eventsignup['user']
-            # translate non-existing value to None (these values are optional in API)
-            if 'checked_in' in eventsignup:
-                cki = eventsignup['checked_in']
-            else:
-                cki = None
-            if 'legi' in eventsignup:
-                legi = eventsignup['legi']
-            else:
-                legi = None
-            # assemble signup dict
-            response.append({
-                             'firstname': user_info['firstname'],
-                             'lastname': user_info['lastname'],
-                             'nethz': user_info['nethz'],
-                             'email': user_info['email'],
-                             'checked_in': cki,
-                             'legi': legi,
-                             'membership': user_info['membership'],
-                             '_id': user_info['_id']})
+            response.append(self._clean_signup_obj(eventsignup))
 
         # save this for later reference by get_statistics
         self.last_signups = deepcopy(response)
