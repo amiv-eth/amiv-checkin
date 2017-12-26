@@ -18,15 +18,6 @@ class GVEvent(db.Model):
     # relation to signup
     signups = db.relationship('GVSignup', order_by='GVSignup._id', back_populates='GVEvent')
 
-    # # implement the signup_count and spots key
-    # def __getitem__(self, key):
-    #     if key == 'signup_count':
-    #         return len(self.signups)
-    #     elif key == 'spots':
-    #         return 0
-    #     else:
-    #         return super().__getitem__(key)
-
 
 class GVSignup(db.Model):
     """
@@ -47,18 +38,11 @@ class GVSignup(db.Model):
     # relation to log
     logs = db.relationship('GVLog', order_by='GVLog.timestamp', back_populates='GVSignup')
 
-    # def __init__(self):
-    #     super().__init__()
-    #     self.user = None
-    #
-    # def assign_user(self, user):
-    #     self.user = user
-    #
-    # def __getitem__(self, key):
-    #     if key == 'user':
-    #         return self.user
-    #     else:
-    #         return super().__getitem__(key)
+    def set_user(self, user):
+        self.user = user
+
+    def get_user(self):
+        return self.user
 
 
 class GVLog(db.Model):

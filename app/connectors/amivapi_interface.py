@@ -165,7 +165,7 @@ class AMIV_API_Interface:
             _filter = 'nethz'
         else:
             if info[0] is 's':
-                info.replace('s', '')
+                info = info.replace('s', '')
             _filter = 'legi'
         # formulate request
         r = self._api_get('/users?where={"%s":"%s"}' % (_filter, info))

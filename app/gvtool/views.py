@@ -29,9 +29,7 @@ def new_gv():
         # create new gv event
         title = new_gv_form.title.data
         desc = new_gv_form.description.data
-        gv = GVEvent(title=title, description=desc)
-        db.session.add(gv)
-        db.session.commit()
+        gv = conn.create_new_gv(title, desc)
 
         # attach event to current user
         pl.event_id = gv._id
