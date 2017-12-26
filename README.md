@@ -12,7 +12,7 @@ The tool currently supports two types of events:
 
 As helpers (like Kulturis) might not have the full administrative rights to modify participant lists in the data
 backends (eventsignups in amivapi), this tool allows the delegation of permission via an 8 digit PIN. The PIN can be
-used to check-in or check-out participants of a single event and to access the participant information for the event.
+used to authenticate check-in or check-out participants of a single event by anyone who knows the PIN.
 To setup the attendancd tracking for an event, a user with sufficient privileges has to initialize the PIN.
 
 Many thanks to the great FLASK tutorials [here](https://scotch.io/tutorials/build-a-crud-web-app-with-python-and-flask-part-one) and [here](https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-i-hello-world).
