@@ -67,8 +67,12 @@ def checkpin():
     # find PresenceList with given pin
     pls = PresenceList.query.filter_by(pin=pin).all()
     if len(pls) != 1:
-        abort(make_response('PIN invalid.', 403))
+        abort(make_response('PIN invalid.', 401))
     else:
+        # check if event is assigned, otherwise state pin invalid
+        pl = pls[0]
+        if pl.event_id is None:
+            abort(make_response('PIN invalid.', 401))
         return make_response('PIN valid.', 200)
     
 

@@ -36,7 +36,7 @@ class GVSignup(db.Model):
     GVEvent = db.relationship('GVEvent', back_populates='signups')
 
     # relation to log
-    logs = db.relationship('GVLog', order_by='GVLog.timestamp', back_populates='GVSignup')
+    logs = db.relationship('GVLog', order_by='GVLog.timestamp', back_populates='GVSignup') 
 
     def set_user(self, user):
         self.user = user

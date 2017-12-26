@@ -106,7 +106,7 @@ def checkin_update_data():
     if pin is None:
         # if no pin is supplied, check if we are logged in
         if not current_user.is_authenticated:
-            abort(401)
+            abort(make_response('Not logged in.', 401))
         pl = current_user
     else:
         # pin supplied, find current user via database

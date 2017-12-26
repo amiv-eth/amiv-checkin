@@ -6,7 +6,6 @@ from . import gvtool_bp
 from .forms import CreateNewGVForm
 from .. import db
 from ..connectors import create_connectors, get_connector_by_id
-from ..connectors.gvtool_models import GVEvent
 
 
 @gvtool_bp.route('/new_gv', methods=['GET', 'POST'])
