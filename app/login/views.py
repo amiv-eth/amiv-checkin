@@ -2,9 +2,8 @@
 
 from flask import flash, redirect, render_template, url_for, request, abort, make_response
 from flask_login import login_required, login_user, logout_user, current_user
-import secrets
 
-from . import login_bp
+from . import login_bp, generate_secure_pin
 from .forms import PinLoginForm, CredentialsLoginForm, ChooseEventForm
 from .. import db
 from ..models import PresenceList
@@ -78,7 +77,7 @@ def login():
                 retrycnt = 1000
                 while retrycnt > 0:
                     # create secure new random pin
-                    pin = 10000000 + secrets.randbelow(90000000)
+                    pin = generate_secure_pin()
                     if len(PresenceList.query.filter_by(pin=pin).all()) == 0:
                         break
                     retrycnt = retrycnt-1

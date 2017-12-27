@@ -7,6 +7,13 @@
 {% block javascript %}
   <script type="text/javascript">
     {% include "checkin/update_tables.js" %}
+
+    function confirm_new_pin() {
+      var r = confirm("Do you really want to re-generate the PIN?");
+      if (r == true) {
+          window.location.replace("{{ url_for('checkin.change_pin') }}");
+      }
+    }
   </script>
 {% endblock %}
 
@@ -27,7 +34,8 @@
       <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
           <ul class="nav navbar-nav navbar-right">
             <li><a href="{{ url_for('login.logout') }}">Logout</a></li>
-            <li><a><i class="fa fa-user"></i>  Your PIN: {{ current_user.pin }}</a></li>
+            <li><a id="change_pin_link" href="#" onclick="confirm_new_pin();return false;">Change PIN</a></li>
+            <li><a><i class="fa fa-user"></i>  Your current PIN: {{ current_user.pin }}</a></li>
         </ul>
       </div>
     </div>

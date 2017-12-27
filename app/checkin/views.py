@@ -5,6 +5,8 @@ from flask_login import login_required, logout_user, current_user
 
 from . import checkin_bp
 from .forms import CheckForm
+from .. import db
+from ..login import generate_secure_pin
 from ..models import PresenceList
 from ..connectors import create_connectors, get_connector_by_id
 
@@ -140,3 +142,34 @@ def checkin_update_data():
 
     j = {'signups': signups, 'statistics': statsl}
     return make_response(jsonify(j))
+
+
+@checkin_bp.route('/change_pin')
+@login_required
+def change_pin():
+    """
+    Generates a new pin for the user and logs the user out.
+    """
+
+    # create new pin and check if already occupied
+    retrycnt = 1000
+    while retrycnt > 0:
+        # create secure new random pin
+        newpin = generate_secure_pin()
+        if PresenceList.query.filter_by(pin=newpin).count() == 0:
+            break
+        retrycnt = retrycnt - 1
+    if retrycnt == 0:
+        print("Could not find a free pin! Delete some PresenceList from DB!")
+        abort(500)
+
+    # logout user and change pin
+    pin_to_change = current_user.pin
+    logout_user()
+    pl = PresenceList.query.filter_by(pin=pin_to_change).one()
+    pl.pin = newpin
+    db.session.commit()
+
+    # inform user and redirect
+    flash('PIN changed! Use new PIN {} to login.'.format(newpin))
+    return redirect(url_for('login.login'))
