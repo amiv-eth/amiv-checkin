@@ -9,11 +9,11 @@ def create_connectors():
     if_1 = AMIV_API_Interface()
     #if_2 = PVK_API_Interface()
     if_3 = GV_Tool_Interface()
-    if_4 = Dummy_Interface()
+    #if_4 = Dummy_Interface()
 
     # create list and return
     #connectors = [if_1, if_2, if_3, if_4]
-    connectors = [if_1, if_3, if_4]
+    connectors = [if_1, if_3]
     return connectors
 
 

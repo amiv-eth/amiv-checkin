@@ -8,17 +8,28 @@ body, h1, h2, h3 {
     font-weight: 700;
 }
 
+h1, h2, h3 {
+    color: #1f2d54;
+}
+
+.navbar-default {
+    background-color: #1f2d54;
+}
+
 a, .navbar-default .navbar-brand, .navbar-default .navbar-nav>li>a {
-  color: #aec251;
+  color: #e8462b;
 }
 
 a:hover, .navbar-default .navbar-brand:hover, .navbar-default .navbar-nav>li>a:hover {
-  color: #687430;
+  color: #ffffff;
 }
 
 footer {
-    padding: 50px 0;
-    background-color: #f8f8f8;
+    padding-top: 30px;
+    padding-right: 0;
+    padding-left: 0;
+    padding-bottom: 20px;
+    background-color: #1f2d54;
 }
 
 p.copyright {
@@ -43,12 +54,14 @@ p.copyright {
 }
 
 .btn-default {
-    border-color: #aec251;
-    color: #aec251;
+    border-color: #1f2d54;
+    color: #1f2d54;
 }
 
 .btn-default:hover {
-    background-color: #aec251;
+    background-color: #ffffff;
+    border-color: #e8462b;
+    color: #e8462b;
 }
 
 .center {
