@@ -118,12 +118,12 @@ def checkin_update_data():
         else:
             pl = pls[0]
 
+    if pl.event_id is None:
+        abort(make_response('No registered event for this PIN.', 400))
+
     # find appropriate connector
     conn = get_connector_by_id(create_connectors(), pl.conn_type)
     conn.token_login(pl.token)
-
-    if pl.event_id is None:
-        abort(make_response('No registered event for this PIN.', 400))
 
     # event is set, setup connector
     conn.set_event(pl.event_id)

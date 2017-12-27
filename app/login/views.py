@@ -7,7 +7,7 @@ from . import login_bp, generate_secure_pin
 from .forms import PinLoginForm, CredentialsLoginForm, ChooseEventForm
 from .. import db
 from ..models import PresenceList
-from ..connectors import create_connectors, get_connector_by_id
+from ..connectors import create_connectors, get_connector_by_id, gvtool_id_string
 
 
 @login_bp.route('/')
@@ -113,6 +113,10 @@ def chooseevent():
     conn = get_connector_by_id(connectors, pl.conn_type)
     conn.token_login(pl.token)
 
+    # catch case where event_id is already assigned
+    if pl.event_id is not None:
+        abort(403)
+
     # create form
     chooseeventform = ChooseEventForm()
     try:
@@ -170,7 +174,7 @@ def chooseevent():
         return redirect(url_for('checkin.checkin'))
 
     # check if we are running on GVs:
-    if conn.id_string == 'conn_gvtool':
+    if conn.id_string == gvtool_id_string:
         # when using the GV tool connector,
         # we allow the user to create a new gv
         show_new = True

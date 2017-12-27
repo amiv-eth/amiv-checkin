@@ -1,11 +1,11 @@
 # global imports
-import datetime
 from copy import deepcopy
 
 # local imports
 from app import db
 from .amivapi_interface import AMIV_API_Interface
 from .gvtool_models import GVEvent, GVSignup, GVLog
+from ..connectors import gvtool_id_string
 
 
 class GV_Tool_Interface(AMIV_API_Interface):
@@ -14,7 +14,7 @@ class GV_Tool_Interface(AMIV_API_Interface):
         super().__init__()
 
         self.human_string = "AMIV General Assemblies"
-        self.id_string = "conn_gvtool"
+        self.id_string = gvtool_id_string
 
     def _clean_gv_obj(self, raw_gv):
         """ Re-format the event object from the API to easier, internal representation """

@@ -1,3 +1,8 @@
+
+# id string for gv tool
+gvtool_id_string = 'conn_gvtool'
+
+
 from .dummy_interface import Dummy_Interface
 from .amivapi_interface import AMIV_API_Interface
 from .gvtool_interface import GV_Tool_Interface
