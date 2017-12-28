@@ -70,6 +70,8 @@ def checkin():
         # legi could be None
         if s['legi'] is None:
             s['legi'] = 'unknown'
+        # capitalize first letter in membership
+        s['membership'] = s['membership'][0].upper() + s['membership'][1:]
 
     # fetch statistics
     stats = conn.get_statistics()

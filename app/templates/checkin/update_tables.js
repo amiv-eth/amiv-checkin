@@ -19,6 +19,10 @@ function beautify_checkin(rawchecked_in) {
     return checked_in;
 }
 
+function beautify_membership(rawmembership) {
+    return rawmembership.charAt(0).toUpperCase() + rawmembership.slice(1);
+}
+
 $(document).ready(function() {
     setInterval(function() {
     $.ajax({
@@ -34,6 +38,7 @@ $(document).ready(function() {
                 newRows += "<td>" + data.signups[i].nethz + "</td>"
                 newRows += "<td>" + beautify_legi(data.signups[i].legi) + "</td>"
                 newRows += "<td>" + data.signups[i].email + "</td>"
+                newRows += "<td>" + beautify_membership(data.signups[i].membership) + "</td>"
                 newRows += "<td>" + beautify_checkin(data.signups[i].checked_in) + "</td></tr>";
             }
             $('#tbody_signups').html(newRows);

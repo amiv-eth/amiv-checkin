@@ -216,29 +216,29 @@ class GV_Tool_Interface(AMIV_API_Interface):
 
             # find user information in stored last_signups list by matching GVSignup._id
             sidx = [i for i, _ in enumerate(self.last_signups) if _['_id'] == gvlog.gvsignup_id][0]
-            u = self.last_signups[sidx]
+            participant = self.last_signups[sidx]
 
             # count membership
             if gvlog.checked_in:
                 op = +1
             else:
                 op = -1
-            if u['membership'] == self.mem_reg_key:
+            if participant['membership'] == self.mem_reg_key:
                 N_reg_mem = N_reg_mem + op
-            elif u['membership'] == self.mem_ext_key:
+            elif participant['membership'] == self.mem_ext_key:
                 N_ext_mem = N_ext_mem + op
-            elif u['membership'] == self.mem_hon_key:
+            elif participant['membership'] == self.mem_hon_key:
                 N_hon_mem = N_hon_mem + op
-            elif u['membership'] == self.non_mem_key:
+            elif participant['membership'] == self.non_mem_key:
                 N_non_mem = N_non_mem + op
             else:
                 raise Exception('Unknown membership string.')
 
             # output dict per log entry
             d['timestamp'] = gvlog.timestamp
-            d['nethz'] = u['nethz']
-            d['email'] = u['email']
-            d['membership'] = u['membership']
+            d['nethz'] = participant['nethz']
+            d['email'] = participant['email']
+            d['membership'] = participant['membership']
             d['new_state'] = gvlog.checked_in
             d['N_reg_mem'] = N_reg_mem
             d['N_ext_mem'] = N_ext_mem
