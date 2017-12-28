@@ -1,5 +1,7 @@
-
-from flask import redirect, render_template, url_for, abort, make_response
+import csv
+import datetime
+from io import StringIO
+from flask import redirect, render_template, url_for, abort, make_response, jsonify, Response
 from flask_login import login_required, current_user
 
 from . import gvtool_bp
@@ -63,7 +65,7 @@ def export_csv():
     conn = get_connector_by_id(connectors, pl.conn_type)
     conn.token_login(pl.token)
 
-    # catch if user did not choose the GV tool as backend:
+    # catch if user did not choose the GV tool as backend
     if pl.conn_type != gvtool_id_string:
         abort(403)
 
@@ -71,5 +73,35 @@ def export_csv():
     if pl.event_id is None:
         abort(403)
 
-    # ToDo: fill me with smart things
-    return make_response('', 200)
+    # retrieve list of cleaned log entries
+    conn.set_event(pl.event_id)
+    gv = conn.get_event()
+    loglist = conn.get_gv_attendance_log()
+
+    # assemble csv output file
+    outcsv = StringIO()  # creates a memory-mapped file structure
+    nlchar = '\r\n'
+
+    # header
+    outcsv.write('// Attendance Log' + nlchar)
+    outcsv.write('// {:s}'.format(gv['title']) + nlchar)
+    if 'time_start' in gv:
+        outcsv.write('// {:s}'.format(gv['time_start'].strftime('%d.%m.%Y %H:%M')) + nlchar)
+    if 'description' in gv:
+        desc = gv['description'].replace('\n', '\n// ')
+        outcsv.write('// {:s}'.format(desc) + nlchar)
+    outcsv.write('// Columns: ' + ', '.join(['"'+str(k)+'"' for k, _ in loglist[0].items()]) + nlchar)
+
+    # add log data
+    csvwriter = csv.writer(outcsv, delimiter=',', quotechar='"', quoting=csv.QUOTE_ALL)
+    for log in loglist:
+        csvwriter.writerow([v for _, v in log.items()])
+
+    # create filename
+    fn = 'Attendance_Log_{:s}'.format(str(int(datetime.datetime.now().timestamp())))
+
+    # return response
+    return Response(
+        outcsv.getvalue(),
+        mimetype="text/csv",
+        headers={"Content-disposition": "attachment; filename={:s}.csv".format(fn)})

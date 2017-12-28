@@ -20,6 +20,11 @@ class AMIV_API_Interface:
         self.human_string = "AMIV Events"
         self.id_string = "conn_amivapi"
 
+        self.mem_reg_key = 'regular'
+        self.mem_ext_key = 'extraordinary'
+        self.mem_hon_key = 'honorary'
+        self.non_mem_key = 'none'
+
     def login(self, username, password):
         """ Log in the user to obtain usable token for requests """
         payload = {"username": str(username), "password": str(password)}

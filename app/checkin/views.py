@@ -8,7 +8,7 @@ from .forms import CheckForm
 from .. import db
 from ..login import generate_secure_pin
 from ..models import PresenceList
-from ..connectors import create_connectors, get_connector_by_id
+from ..connectors import create_connectors, get_connector_by_id, gvtool_id_string
 
 
 @checkin_bp.route('/checkin', methods=['GET', 'POST'])
@@ -81,10 +81,12 @@ def checkin():
         event_start = evobj['time_start'].strftime('%d.%m.%Y %H:%M')
     else:
         event_start = ""
-    if 'description' in evobj:
-        event_desc = evobj['description']
+
+    # enable button for log download if we are in GV mode
+    if conn.id_string == gvtool_id_string:
+        show_log_btn = True
     else:
-        event_desc = ""
+        show_log_btn = False
 
     # load webpage
     return make_response(render_template('checkin/checkin.html',
@@ -93,7 +95,7 @@ def checkin():
                                          statistics=stats,
                                          event_title=event_title,
                                          event_start=event_start,
-                                         event_desc=event_desc,
+                                         log_download=show_log_btn,
                                          title='AMIV Check-In'))
 
 

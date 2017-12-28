@@ -1,4 +1,6 @@
 # global imports
+import datetime
+from collections import OrderedDict
 from copy import deepcopy
 
 # local imports
@@ -43,7 +45,7 @@ class GV_Tool_Interface(AMIV_API_Interface):
             'checked_in': raw_signup.checked_in,
             'legi': legi,
             'membership': user_info['membership'],
-            '_id': user_info['_id']}
+            '_id': raw_signup._id}
 
     def get_next_events(self, filter_resp=True):
         """ Fetch all GVs (filter_resp argument has no effect)"""
@@ -76,7 +78,7 @@ class GV_Tool_Interface(AMIV_API_Interface):
     def get_statistics(self):
         """ return the statistics string for the last fetched  """
         if self.last_signups is None:
-            return {}
+            self.get_signups_for_event()
 
         stats = {
             'Regular Members': 0,
@@ -90,13 +92,13 @@ class GV_Tool_Interface(AMIV_API_Interface):
         total_att = 0
         for u in self.last_signups:
             if u['checked_in'] is True:
-                if u['membership'] == 'regular':
+                if u['membership'] == self.mem_reg_key:
                     stats['Regular Members'] = stats['Regular Members'] + 1
-                elif u['membership'] == 'extraordinary':
+                elif u['membership'] == self.mem_ext_key:
                     stats['Extraordinary Members'] = stats['Extraordinary Members'] + 1
-                elif u['membership'] == 'honorary':
+                elif u['membership'] == self.mem_hon_key:
                     stats['Honorary Members'] = stats['Honorary Members'] + 1
-                elif u['membership'] == 'none':
+                elif u['membership'] == self.non_mem_key:
                     stats['Total Non-Members Present'] = stats['Total Non-Members Present'] + 1
                 else:
                     raise Exception('Unknown membership string.')
@@ -111,7 +113,7 @@ class GV_Tool_Interface(AMIV_API_Interface):
     def _checkin_user_and_log(self, signup, info):
         if (signup.checked_in is None) or (signup.checked_in is False):
             signup.checked_in = True
-            signup.logs.append(GVLog(checked_in=True))
+            signup.logs.append(GVLog(checked_in=True, timestamp=datetime.datetime.now()))
             db.session.commit()
         else:
             raise Exception("User {} already checked in.".format(info))
@@ -119,7 +121,7 @@ class GV_Tool_Interface(AMIV_API_Interface):
     def _checkout_user_and_log(self, signup, info):
         if signup.checked_in:
             signup.checked_in = False
-            signup.logs.append(GVLog(checked_in=False))
+            signup.logs.append(GVLog(checked_in=False, timestamp=datetime.datetime.now()))
             db.session.commit()
         elif not signup.checked_in:
             raise Exception("User {} already checked out.".format(info))
@@ -176,3 +178,75 @@ class GV_Tool_Interface(AMIV_API_Interface):
         db.session.add(gv)
         db.session.commit()
         return gv
+
+    def get_gv_attendance_log(self):
+        """
+        Retrieve log of attendance changes for GV
+        returns an ordered list of log entry dicts with the following keys:
+            timestamp:  datetime of timestamp
+            nethz:      nethz name of user
+            email:      email of user
+            membership: membership status of user
+            new_state:  new state of checked_in field (True for in, False for out)
+            N_reg_mem:  new number of checked-in regular members
+            N_ext_mem:  new number of checked-in extraordinary members
+            N_hon_mem:  new number of checked-in honorary member
+            N_mem:      new number of total checked-in members
+            N_total:    total number of checked-in participants (members and non-members)
+        """
+        if self.last_signups is None:
+            self.get_signups_for_event()
+
+        # query all logs
+        gvlogs = GVLog.query\
+            .filter(GVSignup.gvevent_id==self.event_id, GVLog.gvsignup_id==GVSignup._id)\
+            .order_by(GVLog.timestamp.asc())\
+            .all()
+
+        # loop variables
+        out_list = list()
+        N_reg_mem = 0
+        N_ext_mem = 0
+        N_hon_mem = 0
+        N_non_mem = 0
+
+        # assemble output data
+        for gvlog in gvlogs:
+            d = OrderedDict()  # we want to remember the insertion order of the keys
+
+            # find user information in stored last_signups list by matching GVSignup._id
+            sidx = [i for i, _ in enumerate(self.last_signups) if _['_id'] == gvlog.gvsignup_id][0]
+            u = self.last_signups[sidx]
+
+            # count membership
+            if gvlog.checked_in:
+                op = +1
+            else:
+                op = -1
+            if u['membership'] == self.mem_reg_key:
+                N_reg_mem = N_reg_mem + op
+            elif u['membership'] == self.mem_ext_key:
+                N_ext_mem = N_ext_mem + op
+            elif u['membership'] == self.mem_hon_key:
+                N_hon_mem = N_hon_mem + op
+            elif u['membership'] == self.non_mem_key:
+                N_non_mem = N_non_mem + op
+            else:
+                raise Exception('Unknown membership string.')
+
+            # output dict per log entry
+            d['timestamp'] = gvlog.timestamp
+            d['nethz'] = u['nethz']
+            d['email'] = u['email']
+            d['membership'] = u['membership']
+            d['new_state'] = gvlog.checked_in
+            d['N_reg_mem'] = N_reg_mem
+            d['N_ext_mem'] = N_ext_mem
+            d['N_hon_mem'] = N_hon_mem
+            d['N_mem'] = N_reg_mem + N_ext_mem + N_hon_mem
+            d['N_total'] = N_reg_mem + N_ext_mem + N_hon_mem + N_non_mem
+
+            out_list.append(d)
+
+        # return final list
+        return out_list
