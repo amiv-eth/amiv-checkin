@@ -77,6 +77,7 @@ class GV_Tool_Interface(AMIV_API_Interface):
         # save retrieved users in dict using the users _id as index
         _users = dict()
 
+        # request users for page-sized parts of gv.sublist in parallel
         def _get_userlist_from_api(sublidx):
             _ids = ','.join(['"' + str(s.user_id) + '"' for s in gvsu_splits[sublidx]])
             _filter = '{"_id": {"$in": [' + _ids + ']}}'
@@ -85,13 +86,9 @@ class GV_Tool_Interface(AMIV_API_Interface):
                 _users[u['_id']] = u
 
         # get all pages of users in parallel
-        start = time.time()
         with ThreadPoolExecutor(max_workers=100) as executor:
             u_futures = [executor.submit(_get_userlist_from_api, sublidx) for sublidx in range(len(gvsu_splits))]
             [future.result() for future in u_futures]
-        end = time.time()
-        print('\n\n\n used time: {:f}\n\n\n'.format(end-start))
-
 
         # double check if we got all users
         if len(_users) != len(gv.signups):
