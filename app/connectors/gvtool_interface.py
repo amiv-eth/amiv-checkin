@@ -3,7 +3,6 @@ import datetime
 from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
-import time
 
 # local imports
 from app import db
