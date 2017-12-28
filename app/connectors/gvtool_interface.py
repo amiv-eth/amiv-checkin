@@ -1,7 +1,9 @@
 # global imports
 import datetime
 from collections import OrderedDict
+from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
+import time
 
 # local imports
 from app import db
@@ -60,20 +62,54 @@ class GV_Tool_Interface(AMIV_API_Interface):
         """ Fetch the list of participants for a specific event """
         gv = GVEvent.query.get(self.event_id)
 
-        # fetch user information from AMIV API
-        # WARNING: THIS PRODUCES ONE REQUEST PER USER! REWRITE FOR SPEED REQUIRED.
+        if len(gv.signups) == 0:
+            self.last_signups = []
+            return []
+
+        # get pagination information by asking dummy data
+        r = self._api_get('/users?&where={"_id": {"$in": ["00000000000000"]}}')
+        rj = r.json()
+        n_page = rj['_meta']['max_results']
+
+        # split up gv.signups into page-sized sub lists
+        gvsu_splits = [gv.signups[j:j+n_page] for j in range(0, len(gv.signups), n_page)]
+
+        # save retrieved users in dict using the users _id as index
+        _users = dict()
+
+        def _get_userlist_from_api(sublidx):
+            _ids = ','.join(['"' + str(s.user_id) + '"' for s in gvsu_splits[sublidx]])
+            _filter = '{"_id": {"$in": [' + _ids + ']}}'
+            r = self._api_get('/users?where=%s' % _filter)
+            for u in r.json()['_items']:
+                _users[u['_id']] = u
+
+        # get all pages of users in parallel
+        start = time.time()
+        with ThreadPoolExecutor(max_workers=100) as executor:
+            u_futures = [executor.submit(_get_userlist_from_api, sublidx) for sublidx in range(len(gvsu_splits))]
+            [future.result() for future in u_futures]
+        end = time.time()
+        print('\n\n\n used time: {:f}\n\n\n'.format(end-start))
+
+
+        # double check if we got all users
+        if len(_users) != len(gv.signups):
+            raise Exception('AMIV API did not return the correct amount of users.')
+
+        # attach users to signups
         for s in gv.signups:
-            u = self._api_get('/users/{:s}'.format(s.user_id))
-            s.set_user(u.json())
+            s.set_user(_users[s.user_id])
 
         # assemble return list
         response = list()
         for esu in gv.signups:
             response.append(self._clean_signup_obj(esu))
 
-        # safe this for get_statistics
+        # safe this for get_statistics or get_gv_attendance_log
         self.last_signups = deepcopy(response)
 
+        # return final list of dicts
         return response
 
     def get_statistics(self):

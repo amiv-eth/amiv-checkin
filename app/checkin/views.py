@@ -136,7 +136,7 @@ def checkin_update_data():
     try:
         signups = conn.get_signups_for_event()
     except Exception as E:
-        abort(make_response('Error with API access: {:s}'.format(E), 502))
+        abort(make_response('Error with API access: {:s}'.format(str(E)), 502))
 
     # fetch statistics
     stats = conn.get_statistics()
