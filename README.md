@@ -18,12 +18,12 @@ To setup the attendancd tracking for an event, a user with sufficient privileges
 Many thanks to the great FLASK tutorials [here](https://scotch.io/tutorials/build-a-crud-web-app-with-python-and-flask-part-one) and [here](https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-i-hello-world).
   
 
-### Deployment
+## Deployment
 
 < add infos for deployment here once figured out how to do it >
 
 
-### Development
+## Development
 
 To start the app locally for development, do the following (shell code is for the [fish-shell](https://fishshell.com/)):
 
@@ -36,14 +36,14 @@ To start the app locally for development, do the following (shell code is for th
 1. run the flask app: `flask run`
 
 
-### API Endpoints Documentation
+## API Endpoints Documentation
 
 This is not very important if you do not want to build your own software interfacing with this webapp.
 
 There are three endpoints available:
 
 
-##### HTTP POST to /checkpin
+### HTTP POST to /checkpin
 
 Checks if a pin is valid for authentication or not.
 
@@ -58,7 +58,7 @@ Responses:
 There is a human readable status string message in the response body.
 
 
-##### HTTP POST to /mutate
+### HTTP POST to /mutate
 
 Check user in or out of event.
 
@@ -74,7 +74,7 @@ Responses:
 
 There is a human readable status string message in the response body with an error description for failed actions.
 
-##### HTTP GET to /checkin_update_data
+### HTTP GET to /checkin_update_data
 
 Retreive participant list and statistics in JSON format.
 
