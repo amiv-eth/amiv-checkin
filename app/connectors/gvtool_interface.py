@@ -45,7 +45,8 @@ class GV_Tool_Interface(AMIV_API_Interface):
             'checked_in': raw_signup.checked_in,
             'legi': legi,
             'membership': user_info['membership'],
-            '_id': raw_signup._id}
+            'user_id': user_info['_id'],
+            'signup_id': raw_signup._id}
 
     def get_next_events(self, filter_resp=True):
         """ Fetch all GVs (filter_resp argument has no effect)"""
@@ -80,16 +81,16 @@ class GV_Tool_Interface(AMIV_API_Interface):
         if self.last_signups is None:
             self.get_signups_for_event()
 
-        stats = {
-            'Regular Members': 0,
-            'Extraordinary Members': 0,
-            'Honorary Members': 0,
-            'Total Members Present': 0,
-            'Total Non-Members Present': 0,
-            'Total Attendance': 0,
-            'Maximum Attendance': len(self.last_signups)
-        }
+        stats = OrderedDict()
+        stats['Regular Members'] = 0
+        stats['Extraordinary Members'] = 0
+        stats['Honorary Members'] = 0
+        stats['Total Members Present'] = 0
+        stats['Total Non-Members Present'] = 0
+        stats['Total Attendance'] = 0
+        stats['Maximum Attendance'] = len(self.last_signups)
         total_att = 0
+
         for u in self.last_signups:
             if u['checked_in'] is True:
                 if u['membership'] == self.mem_reg_key:
@@ -130,7 +131,8 @@ class GV_Tool_Interface(AMIV_API_Interface):
 
     def checkin_field(self, info):
         """ Check in a user to an event by flipping the checked_in value """
-        uid = self._get_userinfo_from_info(info)['_id']
+        apiuser = self._get_userinfo_from_info(info)
+        uid = apiuser['_id']
 
         # check if user already signed up
         gvsus = GVSignup.query.filter_by(user_id=uid, gvevent_id=self.event_id).all()
@@ -148,11 +150,14 @@ class GV_Tool_Interface(AMIV_API_Interface):
             gv.signups.append(gvsu)
             self._checkin_user_and_log(gvsu, info)
 
-        return True
+        # return new signup object
+        gvsu.set_user(apiuser)
+        return self._clean_signup_obj(gvsu)
 
     def checkout_field(self, info):
         """ Check out a user to an event by flipping the checked_in value """
-        uid = self._get_userinfo_from_info(info)['_id']
+        apiuser = self._get_userinfo_from_info(info)
+        uid = apiuser['_id']
 
         # check if user already signed up
         gvsus = GVSignup.query.filter_by(user_id=uid, gvevent_id=self.event_id).all()
@@ -166,7 +171,9 @@ class GV_Tool_Interface(AMIV_API_Interface):
         if len(gvsus) < 1:
             raise Exception("User {} never checked-in before.".format(info))
 
-        return True
+        # return new signup object
+        gvsu.set_user(apiuser)
+        return self._clean_signup_obj(gvsu)
 
     '''
     GV Tool Specific Methods
@@ -215,7 +222,7 @@ class GV_Tool_Interface(AMIV_API_Interface):
             d = OrderedDict()  # we want to remember the insertion order of the keys
 
             # find user information in stored last_signups list by matching GVSignup._id
-            sidx = [i for i, _ in enumerate(self.last_signups) if _['_id'] == gvlog.gvsignup_id][0]
+            sidx = [i for i, _ in enumerate(self.last_signups) if _['signup_id'] == gvlog.gvsignup_id][0]
             participant = self.last_signups[sidx]
 
             # count membership

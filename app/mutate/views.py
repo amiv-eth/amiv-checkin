@@ -41,11 +41,11 @@ def mutate():
     # check-in/-out user
     try:
         if checkmode == 'in':
-            conn.checkin_field(info)
-            return make_response('Checked-IN!', 200)
+            su = conn.checkin_field(info)
+            return make_response('{:s} member checked-IN!'.format(su['membership'].upper()), 200)
         else:
-            conn.checkout_field(info)
-            return make_response('Checked-OUT!', 200)
+            su = conn.checkout_field(info)
+            return make_response('{:s} member checked-OUT!'.format(su['membership'].upper()), 200)
     except Exception as E:
         print(E)
         abort(make_response(str(E), 400))

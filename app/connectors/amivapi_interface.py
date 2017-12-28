@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from datetime import datetime, timedelta
 import requests
 from math import ceil
@@ -86,7 +87,8 @@ class AMIV_API_Interface:
             'checked_in': cki,
             'legi': legi,
             'membership': user_info['membership'],
-            '_id': user_info['_id']}
+            'user_id': user_info['_id'],
+            'signup_id': raw_signup['_id']}
 
     def get_next_events(self, filter_resp=True):
         """ Fetch the upcoming events between today and tomorrow """
@@ -153,7 +155,9 @@ class AMIV_API_Interface:
         if self.last_signups is None:
             return {}
 
-        stats = {'Total Signups': len(self.last_signups), 'Current Attendance': 0}
+        stats = OrderedDict()
+        stats['Current Attendance'] = 0
+        stats['Total Signups'] = len(self.last_signups)
         for u in self.last_signups:
             if u['checked_in'] is True:
                 stats['Current Attendance'] = stats['Current Attendance'] + 1
@@ -202,13 +206,13 @@ class AMIV_API_Interface:
         # create PATCH to check-in user
         esu_id = rj['_id']
         etag = rj['_etag']
-        url = self.api_url + '/eventsignups/%s' % esu_id  # we must target specific eventsignup with id
+        url = self.api_url + '/eventsignups/%s?embedded={"user":1}' % esu_id  # we must target specific eventsignup with id
         header = {'If-Match': etag}
         payload = {"checked_in": "True"}
         r = requests.patch(url, auth=self.auth_obj, headers=header, data=payload)
         if r.status_code != 200:
             raise Exception('Could not check-in user: API responded {}.'.format(r.status_code))
-        return True
+        return self._clean_signup_obj(r.json())
 
     def checkout_field(self, info):
         """ Check out a user to an event by flipping the checked_in value """
@@ -233,10 +237,10 @@ class AMIV_API_Interface:
         # create PATCH to check-out user
         esu_id = rj['_id']
         etag = rj['_etag']
-        url = self.api_url + '/eventsignups/%s' % esu_id  # we must target specific eventsignup with id
+        url = self.api_url + '/eventsignups/%s?embedded={"user":1}' % esu_id  # we must target specific eventsignup with id
         header = {'If-Match': etag}
         payload = {"checked_in": "False"}
         r = requests.patch(url, auth=self.auth_obj, headers=header, data=payload)
         if r.status_code != 200:
             raise Exception('Could not check-out user: API responded {}.'.format(r.status_code))
-        return True
+        return self._clean_signup_obj(r.json())

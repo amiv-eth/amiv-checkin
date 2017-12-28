@@ -42,11 +42,11 @@ def checkin():
 
         try:
             if checkmode == 'in':
-                conn.checkin_field(info)
-                flash('User {} Checked-IN!'.format(info))
+                su = conn.checkin_field(info)
+                flash('{:s} member {:s} checked-IN!'.format(su['membership'].upper(), info))
             else:
-                conn.checkout_field(info)
-                flash('User {} Checked-OUT!'.format(info))
+                su = conn.checkout_field(info)
+                flash('{:s} member {:s} checked-OUT!'.format(su['membership'].upper(), info))
         except Exception as E:
             flash('Error: '+str(E), 'error')
 
