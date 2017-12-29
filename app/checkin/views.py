@@ -156,6 +156,11 @@ def change_pin():
     Generates a new pin for the user and logs the user out.
     """
 
+    # do CSRF check on POST data
+    cpform = ChangePinForm()
+    if not cpform.validate():
+        abort(403)
+
     # create new pin and check if already occupied
     retrycnt = 1000
     while retrycnt > 0:
