@@ -15,3 +15,10 @@ class CheckForm(FlaskForm):
                             validators=[DataRequired()],
                             render_kw={'autofocus': True, 'onFocus': 'this.select();'})
     submit = SubmitField('Submit')
+
+
+class ChangePinForm(FlaskForm):
+    """
+    This form does not contain anything except the CSRF token hidden field
+    """
+    submit = SubmitField('Submit')  # dummy field

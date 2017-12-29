@@ -4,7 +4,7 @@ from flask import flash, redirect, render_template, url_for, request, make_respo
 from flask_login import login_required, logout_user, current_user
 
 from . import checkin_bp
-from .forms import CheckForm
+from .forms import CheckForm, ChangePinForm
 from .. import db
 from ..login import generate_secure_pin
 from ..models import PresenceList
@@ -98,6 +98,7 @@ def checkin():
                                          event_title=event_title,
                                          event_start=event_start,
                                          log_download=show_log_btn,
+                                         changepinform=ChangePinForm(),
                                          title='AMIV Check-In'))
 
 
@@ -148,7 +149,7 @@ def checkin_update_data():
     return make_response(jsonify(j))
 
 
-@checkin_bp.route('/change_pin')
+@checkin_bp.route('/change_pin', methods=['POST'])
 @login_required
 def change_pin():
     """

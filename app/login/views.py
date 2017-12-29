@@ -210,6 +210,11 @@ def logout_and_delete_pin():
     """
     s = PresenceList.query.filter_by(pin=current_user.pin).all()
     if len(s) > 0:
+        # only allow pin deletion if no event is assigned yet
+        pl = s[0]
+        if pl.event_id is not None:
+            abort(403)
+        # save pin and logout user
         pin_to_remove = current_user.pin
         logout_user()
         # delete wrongly created PresenceList from database
