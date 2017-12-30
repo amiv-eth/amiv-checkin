@@ -23,11 +23,10 @@ function beautify_membership(rawmembership) {
     return rawmembership.charAt(0).toUpperCase() + rawmembership.slice(1);
 }
 
-$(document).ready(function() {
-    setInterval(function() {
+function update_data() {
     $.ajax({
         type: 'get',
-        url: '{{ url_for('checkin.checkin_update_data') }}',
+        url: "{{ url_for('checkin.checkin_update_data') }}",
         dataType: 'json',
         success: function(data) {
             $('#sync_warning').hide();
@@ -54,6 +53,9 @@ $(document).ready(function() {
             $('#sync_warning').show();
         }
     });
-    }, 5000);
-});
+    }
 
+$(document).ready(function() {
+    update_data();
+    setInterval(update_data, 5000);
+});

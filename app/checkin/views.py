@@ -50,32 +50,6 @@ def checkin():
         except Exception as E:
             flash('Error: '+str(E), 'error')
 
-    # get current signups
-    try:
-        signups = conn.get_signups_for_event()
-    except Exception as E:
-        flash('Could not get signups for event: {}'.format(str(E)), 'error')
-        logout_user()
-        return redirect(url_for('login.login'))
-
-    # output values
-    for s in signups:
-        # signups is boolean, make it human readable
-        if s['checked_in'] is None:
-            s['checked_in'] = '-'
-        elif s['checked_in']:
-            s['checked_in'] = 'IN'
-        else:
-            s['checked_in'] = 'OUT'
-        # legi could be None
-        if s['legi'] is None:
-            s['legi'] = 'unknown'
-        # capitalize first letter in membership
-        s['membership'] = s['membership'][0].upper() + s['membership'][1:]
-
-    # fetch statistics
-    stats = conn.get_statistics()
-
     # fetch title and description
     evobj = conn.get_event()
     event_title = evobj['title']
@@ -93,8 +67,6 @@ def checkin():
     # load webpage
     return make_response(render_template('checkin/checkin.html',
                                          form=checkform,
-                                         signups=signups,
-                                         statistics=stats,
                                          event_title=event_title,
                                          event_start=event_start,
                                          log_download=show_log_btn,

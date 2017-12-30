@@ -61,12 +61,10 @@
             </tr>
             </thead>
             <tbody id="tbody_statistics">
-            {% for s in statistics %}
             <tr>
-                <td width="85%"> {{ s }}</td>
-                <td width="15%"> {{ statistics[s] }}</td>
+                <td width="85%"> Loading... </td>
+                <td width="15%"> </td>
             </tr>
-            {% endfor %}
             </tbody>
         </table>
 
@@ -84,16 +82,14 @@
             </tr>
             </thead>
             <tbody id="tbody_signups">
-            {% for u in signups %}
             <tr>
-                <td> {{ u['firstname'] }} {{ u['lastname'] }}</td>
-                <td> {{ u['nethz'] }}</td>
-                <td> {{ u['legi'] }}</td>
-                <td> {{ u['email'] }}</td>
-                <td> {{ u['membership'] }} </td>
-                <td> {{ u['checked_in'] }}</td>
+                <td> Loading... </td>
+                <td> </td>
+                <td> </td>
+                <td> </td>
+                <td> </td>
+                <td> </td>
             </tr>
-            {% endfor %}
             </tbody>
         </table>
 
