@@ -1,6 +1,6 @@
 
 function hide_flash_messages() {
-    $('.alert').hide();
+    $('.alert').not('#sync_warning_alert').hide();
 }
 
 function beautify_legi(rawlegi) {
