@@ -4,7 +4,7 @@ function confirm_new_pin() {
   if (r == true) {
     var url = "{{ url_for('checkin.change_pin') }}";
     var form = $('<form action="' + url + '" method="POST">' +
-      '{{ changepinform.hidden_tag() }}' +
+      '{{ csrfcheckform.hidden_tag() }}' +
       '</form>');
     $('body').append(form);
     form.submit();

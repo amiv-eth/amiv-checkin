@@ -4,7 +4,7 @@ from flask import flash, redirect, render_template, url_for, request, make_respo
 from flask_login import login_required, logout_user, current_user
 
 from . import checkin_bp
-from .forms import CheckForm, ChangePinForm
+from .forms import CheckForm, CSRFCheckForm
 from .. import db
 from ..login import generate_secure_pin
 from ..models import PresenceList
@@ -40,6 +40,9 @@ def checkin():
         checkmode = checkform.checkmode.data
         info = checkform.datainput.data
 
+        if pl.event_ended:
+            raise Exception('Event ended. No changes allowed.')
+
         try:
             if checkmode == 'in':
                 su = conn.checkin_field(info)
@@ -67,10 +70,11 @@ def checkin():
     # load webpage
     return make_response(render_template('checkin/checkin.html',
                                          form=checkform,
+                                         event_ended=pl.event_ended,
                                          event_title=event_title,
                                          event_start=event_start,
                                          log_download=show_log_btn,
-                                         changepinform=ChangePinForm(),
+                                         csrfcheckform=CSRFCheckForm(),
                                          title='AMIV Check-In'))
 
 
@@ -129,9 +133,9 @@ def change_pin():
     """
 
     # do CSRF check on POST data
-    cpform = ChangePinForm()
+    cpform = CSRFCheckForm()
     if not cpform.validate():
-        abort(403)
+        abort(make_response('CSRF check failed.', 400))
 
     # create new pin and check if already occupied
     retrycnt = 1000
@@ -155,3 +159,37 @@ def change_pin():
     # inform user and redirect
     flash('PIN changed! Use new PIN {} to login.'.format(newpin))
     return redirect(url_for('login.login'))
+
+
+@checkin_bp.route('/close_event', methods=['POST'])
+@login_required
+def close_event():
+    """
+    Closes the event.
+    """
+
+    # do CSRF check on POST data
+    cpform = CSRFCheckForm()
+    if not cpform.validate():
+        abort(make_response('CSRF check failed.', 400))
+
+    # check if already closed
+    pl = current_user
+    if pl.event_ended:
+        abort(make_response('Event already closed.', 400))
+
+    # setup connector
+    conn = get_connector_by_id(create_connectors(), pl.conn_type)
+    conn.token_login(pl.token)
+    conn.set_event(pl.event_id)
+
+    # checkout all checked-in users
+    conn.checkout_all_remaining()
+
+    # mark event as ended
+    pl.event_ended = True
+    db.session.commit()
+
+    # inform user and redirect
+    flash('Event closed.')
+    return redirect(url_for('checkin.checkin'))

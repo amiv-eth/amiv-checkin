@@ -14,7 +14,6 @@ def mutate():
     """
 
     # parse and validate request data
-
     try:
         pin = int(request.form['pin'])
         checkmode = str(request.form['checkmode']).strip().lower()
@@ -22,7 +21,6 @@ def mutate():
             raise Exception('invalid checkmode: {}'.format(checkmode))
         info = str(request.form['info'])
     except Exception as E:
-        print(E)
         abort(make_response('Malformed request. ({})'.format(str(E)), 400))
 
     # find PresenceList with pin
@@ -31,6 +29,10 @@ def mutate():
         abort(make_response('PIN invalid.', 401))
     else:
         pl = pls[0]
+
+    # check if event is closed:
+    if pl.event_ended:
+        abort(make_response('Event ended. No changes allowed.', 400))
 
     # get correct connector, login, and set respective event
     connectors = create_connectors()
@@ -47,7 +49,6 @@ def mutate():
             su = conn.checkout_field(info)
             return make_response('{:s} member checked-OUT!'.format(su['membership'].upper()), 200)
     except Exception as E:
-        print(E)
         abort(make_response(str(E), 400))
 
 

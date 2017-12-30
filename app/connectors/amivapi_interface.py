@@ -153,7 +153,7 @@ class AMIV_API_Interface:
     def get_statistics(self):
         """ return the statistics string for the last fetched  """
         if self.last_signups is None:
-            return {}
+            self.get_signups_for_event()
 
         stats = OrderedDict()
         stats['Current Attendance'] = 0
@@ -237,10 +237,22 @@ class AMIV_API_Interface:
         # create PATCH to check-out user
         esu_id = rj['_id']
         etag = rj['_etag']
-        url = self.api_url + '/eventsignups/%s?embedded={"user":1}' % esu_id  # we must target specific eventsignup with id
+        # we must modify an eventsignup object directly
+        url = self.api_url + '/eventsignups/%s?embedded={"user":1}' % esu_id
         header = {'If-Match': etag}
         payload = {"checked_in": "False"}
         r = requests.patch(url, auth=self.auth_obj, headers=header, data=payload)
         if r.status_code != 200:
             raise Exception('Could not check-out user: API responded {}.'.format(r.status_code))
         return self._clean_signup_obj(r.json())
+
+    def checkout_all_remaining(self):
+        """ Check-out all remaining checked_in users """
+        if self.last_signups is None:
+            self.get_signups_for_event()
+
+        for u in self.last_signups:
+            if u['checked_in']:
+                self.checkout_field(u['email'])
+
+        return True

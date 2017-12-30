@@ -154,16 +154,23 @@ def chooseevent():
             abort(400)
 
         # check if user already exists for event id
-        s = PresenceList.query.filter_by(conn_type=pl.conn_type, event_id=ev['_id']).all()
-        if len(s) > 0:
-            # we have already a pin registered for this event, renew token, show old pin, logout user, and redirect
-            s[0].token = pl.token
-            pin_to_remove = pl.pin
-            existing_pin = s[0].pin
+        existing_pls = PresenceList.query.filter_by(conn_type=pl.conn_type, event_id=ev['_id']).all()
+        if len(existing_pls) > 1:
+            flash('More than one tracking list found for given event. Internal DB Error.', 'error')
             logout_user()
-            # delete wrongly created PresenceList from database
-            s = PresenceList.query.filter_by(pin=pin_to_remove).one()
-            db.session.delete(s)
+            return redirect(url_for('login.login'))
+        elif len(existing_pls) == 1:
+            # we have already a pin registered for this event, open event, renew token,
+            # show old pin, logout user, and redirect
+            existing_pl = existing_pls[0]
+            existing_pl.token = pl.token
+            existing_pl.event_ended = False
+            pin_to_remove = pl.pin
+            existing_pin = existing_pls[0].pin
+            logout_user()
+            # delete just created PresenceList from database as it now will not be used
+            new_pl = PresenceList.query.filter_by(pin=pin_to_remove).one()
+            db.session.delete(new_pl)
             db.session.commit()
             flash('PIN already exists for this event! Use PIN {} to login.'.format(existing_pin))
             return redirect(url_for('login.login'))

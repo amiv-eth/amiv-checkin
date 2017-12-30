@@ -17,8 +17,8 @@ class CheckForm(FlaskForm):
     submit = SubmitField('Submit')
 
 
-class ChangePinForm(FlaskForm):
+class CSRFCheckForm(FlaskForm):
     """
-    This form does not contain anything except the CSRF token hidden field
+    This form does not contain anything except the automatically inserted CSRF token hidden field
     """
-    submit = SubmitField('Submit')  # dummy field
+    pass

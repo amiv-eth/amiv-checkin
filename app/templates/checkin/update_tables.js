@@ -1,4 +1,8 @@
 
+function hide_flash_messages() {
+    $('.alert').hide();
+}
+
 function beautify_legi(rawlegi) {
     if (rawlegi == null) {
         legi = "unknown";
@@ -58,4 +62,5 @@ function update_data() {
 $(document).ready(function() {
     update_data();
     setInterval(update_data, 5000);
+    setTimeout(hide_flash_messages, 10000);
 });
