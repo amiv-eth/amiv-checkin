@@ -9,8 +9,9 @@ from flask import current_app as app
 class AMIV_API_Interface:
     """ Interface class to fetch and update data through the AMIV API """
     def __init__(self):
-        self.api_url = "https://amiv-api.ethz.ch"
-        self.datetime_format = "%Y-%m-%dT%H:%M:%SZ"
+        self.api_url = app.config.get('AMIV_API_URL')
+        if self.api_url is None:
+            raise Exception('AMIV_API_URL missing in flask config.')
 
         self.token = ""
         self.auth_obj = ""
@@ -21,6 +22,7 @@ class AMIV_API_Interface:
         self.human_string = "AMIV Events"
         self.id_string = "conn_amivapi"
 
+        self.datetime_format = "%Y-%m-%dT%H:%M:%SZ"
         self.mem_reg_key = 'regular'
         self.mem_ext_key = 'extraordinary'
         self.mem_hon_key = 'honorary'

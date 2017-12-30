@@ -7,6 +7,7 @@ class Config(object):
     """
 
     # Put any configurations here that are common across all environments
+    AMIV_API_URL = "https://amiv-api.ethz.ch"
 
 
 class DevelopmentConfig(Config):
