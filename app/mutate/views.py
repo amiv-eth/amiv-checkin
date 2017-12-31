@@ -5,6 +5,7 @@ from flask import request, abort, make_response
 from . import mutate_bp
 from ..models import PresenceList
 from ..connectors import create_connectors, get_connector_by_id
+from ..security.security import register_failed_login_attempt, register_login_success
 
 
 @mutate_bp.route('/mutate', methods=['POST'])
@@ -26,8 +27,10 @@ def mutate():
     # find PresenceList with pin
     pls = PresenceList.query.filter_by(pin=pin).all()
     if len(pls) != 1:
+        register_failed_login_attempt()
         abort(make_response('PIN invalid.', 401))
     else:
+        register_login_success()
         pl = pls[0]
 
     # check if event is closed:
@@ -68,8 +71,10 @@ def checkpin():
     # find PresenceList with given pin
     pls = PresenceList.query.filter_by(pin=pin).all()
     if len(pls) != 1:
+        register_failed_login_attempt()
         abort(make_response('PIN invalid.', 401))
     else:
+        register_login_success()
         # check if event is assigned, otherwise state pin invalid
         pl = pls[0]
         if pl.event_id is None:

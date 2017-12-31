@@ -8,6 +8,7 @@ from .forms import PinLoginForm, CredentialsLoginForm, ChooseEventForm
 from .. import db
 from ..models import PresenceList
 from ..connectors import create_connectors, get_connector_by_id, gvtool_id_string
+from ..security.security import register_failed_login_attempt, register_login_success
 
 
 @login_bp.route('/')
@@ -54,8 +55,10 @@ def login():
                     pl = presencelists[0]
                     if pl.pin == inputpin:
                         login_user(pl)
+                        register_login_success()
                         return redirect(url_for('checkin.checkin'))
 
+                register_failed_login_attempt()
                 flash('Invalid PIN.', 'error')
                     
         elif 'method_Cred' in request.values:
@@ -70,10 +73,14 @@ def login():
                 try: 
                     token = conn.login(un, pw)
                 except Exception as E:
+                    register_failed_login_attempt()
                     flash(str(E), 'error')
                     return redirect(url_for('login.login'))
 
-                # credentials are valid, create new user! Create new pin and check if already set.
+                # credentials are valid
+                register_login_success()
+
+                # create new user! Create new pin and check if already set.
                 retrycnt = 1000
                 while retrycnt > 0:
                     # create secure new random pin
@@ -94,7 +101,7 @@ def login():
                     
         else:
             print('Did not find correct hidden value in POST request.')
-            abort(500)
+            abort(400)
 
     # load login template
     return make_response(render_template('login/login.html', pinform=pinform, credform=credform, title='Login'))

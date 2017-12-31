@@ -9,6 +9,7 @@ from .. import db
 from ..login import generate_secure_pin
 from ..models import PresenceList
 from ..connectors import create_connectors, get_connector_by_id, gvtool_id_string
+from ..security.security import register_failed_login_attempt, register_login_success
 
 
 @checkin_bp.route('/checkin', methods=['GET', 'POST'])
@@ -95,8 +96,10 @@ def checkin_update_data():
         # pin supplied, find current user via database
         pls = PresenceList.query.filter_by(pin=pin).all()
         if len(pls) != 1:
+            register_failed_login_attempt()
             abort(make_response('PIN invalid.', 401))
         else:
+            register_login_success()
             pl = pls[0]
 
     if pl.event_id is None:
@@ -183,12 +186,12 @@ def close_event():
     conn.token_login(pl.token)
     conn.set_event(pl.event_id)
 
-    # checkout all checked-in users
-    conn.checkout_all_remaining()
-
     # mark event as ended
     pl.event_ended = True
     db.session.commit()
+
+    # checkout all checked-in users
+    conn.checkout_all_remaining()
 
     # inform user and redirect
     flash('Event closed.')
