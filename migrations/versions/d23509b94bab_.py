@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 48a2ceb37d6c
+Revision ID: d23509b94bab
 Revises: 
-Create Date: 2017-12-25 16:51:00.128358
+Create Date: 2018-01-02 13:36:05.088800
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '48a2ceb37d6c'
+revision = 'd23509b94bab'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -22,7 +22,15 @@ def upgrade():
     sa.Column('_id', sa.Integer(), nullable=False),
     sa.Column('title', sa.String(length=128), nullable=False),
     sa.Column('description', sa.String(length=10000), nullable=True),
-    sa.Column('time_start', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
+    sa.Column('time_start', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
+    sa.PrimaryKeyConstraint('_id')
+    )
+    op.create_table('ipbanns',
+    sa.Column('_id', sa.Integer(), nullable=False),
+    sa.Column('ip', sa.String(length=32), nullable=False),
+    sa.Column('failed_tries', sa.Integer(), nullable=False),
+    sa.Column('time_ban_start', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
+    sa.Column('banned', sa.Boolean(), nullable=False),
     sa.PrimaryKeyConstraint('_id')
     )
     op.create_table('presencelists',
@@ -46,7 +54,7 @@ def upgrade():
     )
     op.create_table('gvtool_logs',
     sa.Column('_id', sa.Integer(), nullable=False),
-    sa.Column('timestamp', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
+    sa.Column('timestamp', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
     sa.Column('checked_in', sa.Boolean(), nullable=True),
     sa.Column('gvsignup_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['gvsignup_id'], ['gvtool_signups._id'], ),
@@ -61,5 +69,6 @@ def downgrade():
     op.drop_table('gvtool_signups')
     op.drop_index(op.f('ix_presencelists_pin'), table_name='presencelists')
     op.drop_table('presencelists')
+    op.drop_table('ipbanns')
     op.drop_table('gvtool_events')
     # ### end Alembic commands ###

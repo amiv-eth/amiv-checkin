@@ -90,7 +90,8 @@ def export_csv():
     if 'description' in gv:
         desc = gv['description'].replace('\n', '\n// ')
         outcsv.write('// {:s}'.format(desc) + nlchar)
-    outcsv.write('// Columns: ' + ', '.join(['"'+str(k)+'"' for k, _ in loglist[0].items()]) + nlchar)
+    if len(loglist) > 0:
+        outcsv.write('// Columns: ' + ', '.join(['"'+str(k)+'"' for k, _ in loglist[0].items()]) + nlchar)
 
     # add log data
     csvwriter = csv.writer(outcsv, delimiter=',', quotechar='"', quoting=csv.QUOTE_ALL)
