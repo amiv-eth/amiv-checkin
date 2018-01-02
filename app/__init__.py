@@ -18,11 +18,12 @@ db = SQLAlchemy()
 login_manager = LoginManager()
 
 
-def create_app(config_name):
+def create_app(config_name, file_based_secrets=True):
     # initialize flask app and configure
-    app = Flask(__name__, instance_relative_config=True)
+    app = Flask(__name__, instance_relative_config=file_based_secrets)
     app.config.from_object(app_config[config_name])
-    app.config.from_pyfile('config.py')
+    if file_based_secrets:
+        app.config.from_pyfile('config.py')
 
     # apply proxy-fix to get correct remote-ip
     num_proxies = app.config.get('SECURITY_NUM_PROXY_LEVELS')

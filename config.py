@@ -1,5 +1,7 @@
 # config.py
 
+import os
+
 
 class Config(object):
     """
@@ -38,6 +40,12 @@ class ProductionConfig(Config):
     SECURITY_NUM_PROXY_LEVELS = 0
     SECURITY_MAX_FAILED_LOGIN_TRIES = 5
     SECURITY_UNBANNABLE_SUBNETS = ['129.132.0.0/16']
+
+    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://'\
+                                + os.getenv('RDS_USERNAME') + ':' + os.getenv('RDS_PASSWORD')\
+                                + '@' + os.getenv('RDS_HOSTNAME')\
+                                + '/' + os.getenv('RDS_DB_NAME')
+    SECRET_KEY = os.getenv('SECRET_KEY')
 
 
 app_config = {
