@@ -3,7 +3,7 @@ amiv-checkin
 
 A tool to track attendance for AMIV events written in Python 3. It allows to see a list of all signed up people of an event, GV, or a PVK
 course (PVK attendance tracking not yet implemented.) Every participant can then be checked-in and out either via the
-web frontend or JSON based API endpoints. In conjuction with the [legi-scanner Android App](https://gitlab.ethz.ch/amiv/legi-scanner)
+web frontend or JSON based API endpoints. In conjuction with the [check-in Android App](https://gitlab.ethz.ch/amiv/amiv-checkin-app)
 amiv-checkin offers quick and efficient tracking of attendance statistics and admission. 
 
 The tool currently supports two types of events:
