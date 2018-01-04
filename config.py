@@ -28,6 +28,11 @@ class DevelopmentConfig(Config):
     SECURITY_UNBANNABLE_SUBNETS = ['129.132.0.0/16', '127.0.0.1/32']
 
 
+def cl(obj):
+    if obj is None:
+        return ""
+
+
 class ProductionConfig(Config):
     """
     Production configurations
@@ -42,9 +47,9 @@ class ProductionConfig(Config):
     SECURITY_UNBANNABLE_SUBNETS = ['129.132.0.0/16']
 
     SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://'\
-                                + os.getenv('RDS_USERNAME') + ':' + os.getenv('RDS_PASSWORD')\
-                                + '@' + os.getenv('RDS_HOSTNAME')\
-                                + '/' + os.getenv('RDS_DB_NAME')
+                                + cl(os.getenv('RDS_USERNAME')) + ':' + cl(os.getenv('RDS_PASSWORD'))\
+                                + '@' + cl(os.getenv('RDS_HOSTNAME'))\
+                                + '/' + cl(os.getenv('RDS_DB_NAME'))
     SECRET_KEY = os.getenv('SECRET_KEY')
 
 

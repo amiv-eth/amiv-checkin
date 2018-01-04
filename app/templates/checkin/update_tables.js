@@ -53,8 +53,17 @@ function update_data() {
             }
             $("#tbody_statistics").html(newStats);
         },
-        error: function() {
+        error: function(xhr, textStatus, thrownError) {
+            var err = "(Error: ";
+            err += textStatus;
+            err += " HTTP ";
+            err += xhr.status;
+            err += ": ";
+            err += xhr.responseText;
+            err += ")";
+            $("#sync_warning_reason").html(err);
             $('#sync_warning').show();
+
         }
     });
     }
