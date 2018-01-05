@@ -33,7 +33,7 @@ def cl(obj):
         return ""
 
 
-class ProductionConfig(Config):
+class AWSConfig(Config):
     """
     Production configurations
     """
@@ -53,7 +53,22 @@ class ProductionConfig(Config):
     SECRET_KEY = os.getenv('SECRET_KEY')
 
 
+class ISGEEConfig(Config):
+    """
+    Production configurations
+    """
+
+    DEBUG = False
+    TESTING = False
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+    SECURITY_NUM_PROXY_LEVELS = 0
+    SECURITY_MAX_FAILED_LOGIN_TRIES = 5
+    SECURITY_UNBANNABLE_SUBNETS = ['129.132.0.0/16']
+
+
 app_config = {
     'development': DevelopmentConfig,
-    'production': ProductionConfig
+    'prod_aws': AWSConfig,
+    'prod_isgee': ISGEEConfig
 }
