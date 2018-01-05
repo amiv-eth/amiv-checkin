@@ -13,6 +13,10 @@ class AMIV_API_Interface:
         if self.api_url is None:
             raise Exception('AMIV_API_URL missing in flask config.')
 
+        self.auth_group_id = app.config.get('AMIV_AUTH_GROUP_ID')
+        if self.auth_group_id is None:
+            raise Exception('AMIV_AUTH_GROUP_ID missing in flask config')
+
         self.token = ""
         self.auth_obj = ""
         self.event_id = ""
@@ -32,12 +36,22 @@ class AMIV_API_Interface:
         """ Log in the user to obtain usable token for requests """
         payload = {"username": str(username), "password": str(password)}
         r = requests.post(self.api_url + '/sessions', data=payload)
+        rj = r.json()
         if r.status_code is 201:
-            self.token = r.json()['token']
+            self.token = rj['token']
             self.auth_obj = requests.auth.HTTPBasicAuth(self.token, "")
-            return self.token
         else:
             raise Exception('Invalid username or password')
+
+        # check if logged in user is part of authentication group
+        uid = rj['user']
+        _filter = '{"group":"%s", "user":"%s"}' % (self.auth_group_id, uid)
+        r = self._api_get('/groupmemberships?where=' + _filter)
+        rj = r.json()
+        if len(rj['_items']) != 1:
+            raise Exception('User not in Checkin-WebApp authorized group.')
+
+        return self.token
 
     def token_login(self, token):
         """ Log in the user by storing their session token in this class """
