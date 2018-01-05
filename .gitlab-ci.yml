@@ -1,0 +1,25 @@
+stages:
+  - deploy
+
+deploy:
+  stage: deploy
+  image: alpine:3.7
+  when: manual
+  before_script:
+    - 'which ssh-agent || ( apk --no-cache add openssh-client)'
+    - mkdir -p ~/.ssh
+    - eval $(ssh-agent -s)
+    - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+    - ssh-add <(echo "$DEPLOY_PRIVATE_KEY")
+    - apk --no-cache add rsync
+  script:
+    - ssh -p22 amivcheckin@login.ee.ethz.ch "mkdir -p ~/app_tmp/"
+    - rsync -rav -e ssh --exclude='.git/' --exclude='.gitlab-ci.yml' --delete-excluded ./ amivcheckin@login.ee.ethz.ch:~/app_tmp
+    - ssh -p22 amivcheckin@login.ee.ethz.ch "cp -r ~/app/instance/ ~/app_tmp/instance/"
+    - ssh -p22 amivcheckin@login.ee.ethz.ch "cp -r ~/app/instance/ ~/app_tmp/instance/"
+    - ssh -p22 amivcheckin@login.ee.ethz.ch "mv ~/app ~/app_old && mv ~/app_tmp ~/app && chmod -R 700 ~/app"
+    - ssh -p22 amivcheckin@login.ee.ethz.ch "touch ~/app-touch-reload.gg"
+    - ssh -p22 amivcheckin@login.ee.ethz.ch "rm -rf ~/app_old"
+  environment:
+    name: production
+    url: https://checkin.amiv.ethz.ch
