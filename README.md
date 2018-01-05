@@ -20,7 +20,9 @@ Many thanks to the great FLASK tutorials [here](https://scotch.io/tutorials/buil
 
 ## Deployment
 
-< add infos for deployment here once figured out how to do it >
+is done via GitLab CI pipeline. Launch the "deploy" job manually from the commits view in GitLab to deploy the app to the ISG.EE server.
+The webapp is reachable at [checkin.amiv.ethz.ch](https://checkin.amiv.ethz.ch).
+uWSGI is used to serve the app behind the ISGs apache web server and the [ISG's SQL server](https://mysql.ee.ethz.ch) holds the database.
 
 
 ## Development
