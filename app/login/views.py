@@ -242,3 +242,10 @@ def logout_and_delete_pin():
     # redirect to the login page
     return redirect(url_for('login.login'))
 
+
+@login_bp.route('/privacy')
+def privacy():
+    """
+    Display the privacy statement.
+    """
+    return render_template('login/privacy.html')

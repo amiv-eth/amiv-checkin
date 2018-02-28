@@ -1,0 +1,27 @@
+{% import "bootstrap/utils.html" as utils %}
+{% import "bootstrap/wtf.html" as wtf %}
+{% extends "base.html" %}
+{% block title %}Privacy Statement{% endblock %}
+{% block body %}
+<div class="content-section">
+  <br/>
+  {{ utils.flashed_messages() }}
+  <br/>
+  <div class="center-narrow">
+    <h1>AMIV Privacy Statement</h1>
+    <br/>
+    <h3>AMIV Checkin App</h3>
+      <p>Data is only ever collected from active user input, never passively or in the background. No pictures are saved
+      from the camera. The camera is only used to detect barcodes and is only active when the camera preview is
+      displayed on-screen within the app. The barcodes or user text input will be sent to a secure AMIV server where
+      they are used for tracking event attendance of persons registered at the ETH only. If the sent data does not
+      correspond to any person registered at the ETH then the data is discarded. No data is collected which is
+      unrelated to the functionality of the app. The data is not shared with any third parties. The data is purely
+      used by entitled members of the AMIV. If you would prefer not to have this data shared with the AMIV servers,
+      please uninstall the app or do not open/use the app. There is no way to prevent the data being sent to AMIV
+      servers as this is the core functionality of the app. Whereby AMIV represents the 'Akademische Maschinen- und
+      Elektro-Ingenieur Verein' at the ETH Zurich.</p><br/>
+    <a href="{{ url_for('login.login') }}" class="btn btn-default" role="button">Back</a>
+  </div>
+</div>
+{% endblock %}
