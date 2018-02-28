@@ -22,7 +22,7 @@ def create_connectors():
     return connectors
 
 
-def get_connector_by_id(connectors: object, idstr: object) -> object:
+def get_connector_by_id(connectors: list, idstr: str) -> AMIV_API_Interface:
     for c in connectors:
         if c.id_string == idstr:
             return c
