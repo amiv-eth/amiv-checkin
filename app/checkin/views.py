@@ -119,12 +119,22 @@ def checkin_update_data():
         abort(make_response('Error with API access: {:s}'.format(str(E)), 502))
 
     # fetch statistics
-    stats = conn.get_statistics()
+    try:
+        stats = conn.get_statistics()
+    except Exception as E:
+        abort(make_response('Error with API access: {:s}'.format(str(E)), 502))
     statsl = list()
     for k in stats:
         statsl.append({'key': k, 'value': stats[k]})
 
-    j = {'signups': signups, 'statistics': statsl}
+    # fetch information about event
+    try:
+        evobj = conn.get_event()
+    except Exception as E:
+        abort(make_response('Error with API access: {:s}'.format(str(E)), 502))
+    evobj['event_type'] = conn.human_string  # add description of event type
+
+    j = {'signups': signups, 'statistics': statsl, 'eventinfos': evobj}
     return make_response(jsonify(j))
 
 
