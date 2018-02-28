@@ -55,11 +55,16 @@ def checkin():
             flash('Error: '+str(E), 'error')
 
     # fetch title and description
-    evobj = conn.get_event()
-    event_title = evobj['title']
-    if 'time_start' in evobj:
-        event_start = evobj['time_start'].strftime('%d.%m.%Y %H:%M')
-    else:
+    try:
+        evobj = conn.get_event()
+        event_title = evobj['title']
+        if 'time_start' in evobj:
+            event_start = evobj['time_start'].strftime('%d.%m.%Y %H:%M')
+        else:
+            event_start = ""
+    except Exception as E:
+        flash('Error: ' + str(E), 'error')
+        event_title = "< unknown >"
         event_start = ""
 
     # enable button for log download if we are in GV mode
@@ -196,12 +201,16 @@ def close_event():
     conn.token_login(pl.token)
     conn.set_event(pl.event_id)
 
+    try:
+        # checkout all checked-in users
+        conn.checkout_all_remaining()
+    except Exception as E:
+        flash('Error: ' + str(E), 'error')
+        return redirect(url_for('checkin.checkin'))
+
     # mark event as ended
     pl.event_ended = True
     db.session.commit()
-
-    # checkout all checked-in users
-    conn.checkout_all_remaining()
 
     # inform user and redirect
     flash('Event closed.')
