@@ -5,6 +5,8 @@ from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
 
 # local imports
+from math import ceil
+
 from app import db
 from .amivapi_interface import AMIV_API_Interface
 from .gvtool_models import GVEvent, GVSignup, GVLog
@@ -118,6 +120,7 @@ class GV_Tool_Interface(AMIV_API_Interface):
         stats['Extraordinary Members'] = 0
         stats['Honorary Members'] = 0
         stats['Total Members Present'] = 0
+        stats['Current Absolute Majority'] = 0
         stats['Total Non-Members Present'] = 0
         stats['Total Attendance'] = 0
         stats['Maximum Attendance'] = len(self.last_signups)
@@ -139,6 +142,10 @@ class GV_Tool_Interface(AMIV_API_Interface):
         stats['Total Members Present'] = stats['Regular Members']\
                                          + stats['Extraordinary Members']\
                                          + stats['Honorary Members']
+
+        if stats['Total Members Present'] > 0:
+            stats['Current Absolute Majority'] = ceil(stats['Total Members Present'] / 2 + 0.1)
+
         stats['Total Attendance'] = total_att
 
         return stats
