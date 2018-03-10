@@ -130,8 +130,7 @@ def chooseevent():
         events = conn.get_next_events()
     except Exception as E:
         flash("Could not get next events: {}".format(E), 'error')
-        logout_user()
-        return redirect(url_for('login.login'))
+        return logout_and_delete_pin()
 
     # create event list for drop-down menu
     elist = []
