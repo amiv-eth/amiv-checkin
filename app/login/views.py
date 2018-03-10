@@ -1,10 +1,11 @@
 # app/login/views.py
+from datetime import datetime
 
 from flask import flash, redirect, render_template, url_for, request, abort, make_response
 from flask_login import login_required, login_user, logout_user, current_user
 
 from . import login_bp, generate_secure_pin
-from .forms import PinLoginForm, CredentialsLoginForm, ChooseEventForm
+from .forms import PinLoginForm, CredentialsLoginForm
 from .. import db
 from ..models import PresenceList
 from ..connectors import create_connectors, get_connector_by_id, gvtool_id_string
@@ -107,6 +108,23 @@ def login():
     return make_response(render_template('login/login.html', pinform=pinform, credform=credform, title='Login'))
 
 
+def beautify_event(raw_event, additional_fields={}):
+    """
+    Beautify event dict to include strings for display.
+    :param raw_event: dict as returned by conn.get_event()
+    :param additional_fields: dict which just gets all the keys copied to the output
+    :return: dict with signup_string and time_string added
+    """
+    if 'signup_count' in raw_event:
+        spots = 'unlimited' if raw_event['spots'] == 0 else raw_event['spots']
+        raw_event['signups_string'] = "{} / {}".format(raw_event['signup_count'], spots)
+    if 'time_start' in raw_event:
+        raw_event['time_string'] = raw_event['time_start'].strftime('%d.%m.%Y %H:%M')
+    for k in additional_fields:
+        raw_event[k] = additional_fields[k]
+    return raw_event
+
+
 @login_bp.route('/chooseevent', methods=['GET', 'POST'])
 @login_required
 def chooseevent():
@@ -124,67 +142,49 @@ def chooseevent():
     if pl.event_id is not None:
         abort(403)
 
-    # create form
-    chooseeventform = ChooseEventForm()
+    # gather possible events in this list
+    upcoming_events = []
+
+    # get all already tracked events
+    not_found_events = []  # save event ids of events which the API fails to GET
+    found_events = []
+    # query all presence lists for current event type
+    existing_pls = PresenceList.query\
+        .filter(PresenceList.conn_type == conn.id_string)\
+        .filter(PresenceList.event_id >= 0)\
+        .all()
+    for pl in existing_pls:
+        # retreive event information from data source
+        conn.set_event(pl.event_id)
+        try:
+            evobj = conn.get_event()
+        except Exception as E:
+            not_found_events.append(str(pl.event_id))
+            continue
+        # we found a tracked event, add it to the list
+        found_events.append(pl.event_id)
+        upcoming_events.append(beautify_event(evobj, {'event_ended': pl.event_ended}))
+
+    # get upcoming events
     try:
         events = conn.get_next_events()
     except Exception as E:
         flash("Could not get next events: {}".format(E), 'error')
         return logout_and_delete_pin()
-
-    # create event list for drop-down menu
-    elist = []
     for e in events:
-        # format the event title to include spot numbers and start date
-        event_title = "{}".format(e['title'])
-        if 'signup_count' in e:
-            spots = 'unlimited' if e['spots'] == 0 else e['spots']
-            event_title = "{} - ({}/{})".format(event_title, e['signup_count'], spots)
-        if 'time_start' in e:
-            event_title = "{} - {}".format(event_title, e['time_start'].strftime('%d.%m.%Y %H:%M'))
-        elist.append((e['_id'], event_title))
-    # assign data to dropdown
-    chooseeventform.chooseevent.choices = elist
+        if e['_id'] not in found_events:
+            upcoming_events.append(beautify_event(e, {'event_ended': False}))
 
-    # check if we are on POST to handle all replies
-    if chooseeventform.validate_on_submit():
-        # get event id string and find the corresponding event object
-        ev_id_string = chooseeventform.chooseevent.data
-        ev = None
-        for eidx in range(len(events)):
-            if events[eidx]['_id'] == ev_id_string:
-                ev = events[eidx]
-                break
-        if ev is None:
-            # user submitted non-existing event id
-            abort(400)
+    if len(not_found_events) > 0:
+        flash('Warning: The following event IDs do '
+              'not seem to exist in the chosen '
+              'data source: {:s}.'.format(', '.join(not_found_events))
+              , 'warning')
 
-        # check if user already exists for event id
-        existing_pls = PresenceList.query.filter_by(conn_type=pl.conn_type, event_id=ev['_id']).all()
-        if len(existing_pls) > 1:
-            flash('More than one tracking list found for given event. Internal DB Error.', 'error')
-            logout_user()
-            return redirect(url_for('login.login'))
-        elif len(existing_pls) == 1:
-            # we have already a pin registered for this event, open event, renew token,
-            # show old pin, logout user, and redirect
-            existing_pl = existing_pls[0]
-            existing_pl.token = pl.token
-            existing_pl.event_ended = False
-            pin_to_remove = pl.pin
-            existing_pin = existing_pls[0].pin
-            logout_user()
-            # delete just created PresenceList from database as it now will not be used
-            new_pl = PresenceList.query.filter_by(pin=pin_to_remove).one()
-            db.session.delete(new_pl)
-            db.session.commit()
-            flash('PIN already exists for this event! Use PIN {} to login.'.format(existing_pin))
-            return redirect(url_for('login.login'))
-
-        # ok, new event chosen. Set event_id in current PresenceList and go further
-        pl.event_id = ev['_id']
-        db.session.commit()
-        return redirect(url_for('checkin.checkin'))
+    # sort the list by start date (newest first)
+    upcoming_events = sorted(upcoming_events,
+                             key=lambda k: k['time_start'] if ('time_start' in k) else datetime(1970, 1, 1),
+                             reverse=True)
 
     # check if we are running on GVs:
     if conn.id_string == gvtool_id_string:
@@ -196,10 +196,60 @@ def chooseevent():
 
     # on GET, render page
     return make_response(render_template('login/chooseevent.html',
-                                         events_form=chooseeventform,
                                          title='Choose Event',
+                                         upcoming_events=upcoming_events,
                                          allow_create_new=show_new
                                          ))
+
+
+@login_bp.route('/chooseevent/select/<string:_id>')
+@login_required
+def select_chooseevent(_id):
+
+    # get connector
+    connectors = create_connectors()
+    pl = current_user
+    conn = get_connector_by_id(connectors, pl.conn_type)
+    conn.token_login(pl.token)
+
+    # catch case where event_id is already assigned
+    if pl.event_id is not None:
+        abort(403)
+
+    # check if event ID exists:
+    conn.set_event(_id)
+    try:
+        evobj = conn.get_event()
+    except Exception as E:
+        flash("Invalid event ID selected: {:s}".format(E), 'error')
+        return logout_and_delete_pin()
+
+    # check if user already exists for event id
+    existing_pls = PresenceList.query.filter_by(conn_type=pl.conn_type, event_id=evobj['_id']).all()
+    if len(existing_pls) > 1:
+        flash('More than one tracking list found for given event. Internal DB Error.', 'error')
+        logout_user()
+        return redirect(url_for('login.login'))
+    elif len(existing_pls) == 1:
+        # we have already a pin registered for this event, open event, renew token,
+        # show old pin, logout user, and redirect
+        existing_pl = existing_pls[0]
+        existing_pl.token = pl.token
+        existing_pl.event_ended = False
+        pin_to_remove = pl.pin
+        existing_pin = existing_pls[0].pin
+        logout_user()
+        # delete just created PresenceList from database as it now will not be used
+        new_pl = PresenceList.query.filter_by(pin=pin_to_remove).one()
+        db.session.delete(new_pl)
+        db.session.commit()
+        flash('PIN already exists for this event! Use PIN {} to login.'.format(existing_pin))
+        return redirect(url_for('login.login'))
+
+    # ok, new event chosen. Set event_id in current PresenceList and go further
+    pl.event_id = evobj['_id']
+    db.session.commit()
+    return redirect(url_for('checkin.checkin'))
 
 
 @login_bp.route('/logout')

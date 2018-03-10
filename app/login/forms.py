@@ -23,11 +23,3 @@ class CredentialsLoginForm(FlaskForm):
     backend = SelectField('Event Type')
     submit = SubmitField('Login with Credentials')
     method_Cred = HiddenField('Credentials')
-
-
-class ChooseEventForm(FlaskForm):
-    """
-    Form to chose event for which you want to create the PresenceList
-    """
-    chooseevent = SelectField('Events') 
-    submit = SubmitField('Create Attendance Tracker for selected Event.')

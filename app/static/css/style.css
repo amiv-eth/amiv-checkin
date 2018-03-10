@@ -24,6 +24,10 @@ a:hover, .navbar-default .navbar-brand:hover, .navbar-default .navbar-nav>li>a:h
   color: #ffffff;
 }
 
+a.table_link:hover {
+    color:#1f2d54;
+}
+
 footer {
     padding-top: 30px;
     padding-right: 0;
