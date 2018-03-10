@@ -52,7 +52,7 @@ def mutate():
         else:
             su = conn.checkout_field(info)
             rd = {'message': '{:s} member checked-OUT!'.format(su['membership'].upper()), 'signup': su}
-            return make_response(rd, 200)
+            return make_response(jsonify(rd), 200)
     except Exception as E:
         abort(make_response(str(E), 400))
 
