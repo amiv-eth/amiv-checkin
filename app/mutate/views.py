@@ -1,6 +1,6 @@
 # app/checkin/views.py
 
-from flask import request, abort, make_response
+from flask import request, abort, make_response, jsonify
 
 from . import mutate_bp
 from ..models import PresenceList
@@ -47,10 +47,12 @@ def mutate():
     try:
         if checkmode == 'in':
             su = conn.checkin_field(info)
-            return make_response('{:s} member checked-IN!'.format(su['membership'].upper()), 200)
+            rd = {'message': '{:s} member checked-IN!'.format(su['membership'].upper()), 'signup': su}
+            return make_response(jsonify(rd), 200)
         else:
             su = conn.checkout_field(info)
-            return make_response('{:s} member checked-OUT!'.format(su['membership'].upper()), 200)
+            rd = {'message': '{:s} member checked-OUT!'.format(su['membership'].upper()), 'signup': su}
+            return make_response(rd, 200)
     except Exception as E:
         abort(make_response(str(E), 400))
 
