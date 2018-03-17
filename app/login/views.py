@@ -41,13 +41,13 @@ def login():
     if request.method == 'POST':
         if 'method_PIN' in request.values:
             if pinform.validate_on_submit():
-                
+
                 # PIN form was submitted, try user login
                 inputpin = pinform.pin.data
 
                 # get all presence lists with given PIN
                 presencelists = PresenceList.query.filter_by(pin=inputpin).all()
-                
+
                 if len(presencelists) > 1:
                     # we have a database error
                     raise Exception('Multiple PresenceList with same PIN found!')
@@ -61,7 +61,7 @@ def login():
 
                 register_failed_login_attempt()
                 flash('Invalid PIN.', 'error')
-                    
+
         elif 'method_Cred' in request.values:
             if credform.validate_on_submit():
 
@@ -71,7 +71,7 @@ def login():
                 # try to validate against connector
                 un = credform.username.data
                 pw = credform.password.data
-                try: 
+                try:
                     token = conn.login(un, pw)
                 except Exception as E:
                     register_failed_login_attempt()
@@ -99,7 +99,7 @@ def login():
                 db.session.commit()
                 login_user(npl)
                 return redirect(url_for('login.chooseevent'))
-                    
+
         else:
             print('Did not find correct hidden value in POST request.')
             abort(400)
