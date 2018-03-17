@@ -9,7 +9,7 @@ class PVK_API_Interface:
         raise Exception("Do not use this class. It is not maintained.")
 
         self.amiv_api_url = "https://amiv-api.ethz.ch"
-        self.api_url = ""  # TODO: Add URL of PVK API
+        self.api_url = "http://pvk-api-dev.amiv.ethz.ch"  # TODO: Update URL of PVK API
         self.datetime_format = "%Y-%m-%dT%H:%M:%SZ"
 
         self.token = ""
