@@ -68,5 +68,8 @@ def create_app(config_name, file_based_secrets=True):
     from .gvtool import gvtool_bp
     app.register_blueprint(gvtool_bp)
 
+    from .event import event_bp
+    app.register_blueprint(event_bp)
+
     # app initalized
     return app

@@ -98,6 +98,9 @@ def login():
                 db.session.add(npl)
                 db.session.commit()
                 login_user(npl)
+                if (credform.backend.data == Event_Interface.id_string):
+                    redirect(url_for('event.choosetheevent'))
+
                 return redirect(url_for('login.chooseevent'))
 
         else:
