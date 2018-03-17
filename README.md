@@ -4,7 +4,7 @@ amiv-checkin
 A tool to track attendance for AMIV events written in Python 3. It allows to see a list of all signed up people of an event, GV, or a PVK
 course (PVK attendance tracking not yet implemented.) Every participant can then be checked-in and out either via the
 web frontend or JSON based API endpoints. In conjunction with the [check-in Android App](https://gitlab.ethz.ch/amiv/amiv-checkin-app)
-amiv-checkin offers quick and efficient tracking of attendance statistics and admission. 
+amiv-checkin offers quick and efficient tracking of attendance statistics and admission.
 
 The tool currently supports two types of events:
 - AMIV Events from the amivapi
@@ -18,7 +18,7 @@ To setup the attendance tracking for an event, a user with sufficient privileges
 Many thanks to the great FLASK tutorials [here](https://scotch.io/tutorials/build-a-crud-web-app-with-python-and-flask-part-one) and [here](https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-i-hello-world).
 
 If you want to write your own frontend for checkin / checkout, see the API documentation at [README_API.md](README_API.md).
-  
+
 
 ## Deployment
 
@@ -36,5 +36,21 @@ To start the app locally for development, do the following (shell code is for th
 1. and activate it: `source env/bin/activate.fish`
 1. install the requirements inside the virtualenv: `pip install -r requirements.txt`
 1. set the following environment variables: `set -x FLASK_APP run.py`, `set -x FLASK_CONFIG development`, and `set -x FLASK_DEBUG 1`
-1. create the local settings file with all the juicy secrets inside in `instance/config.py`. The two follwing options must be set: `SQLALCHEMY_DATABASE_URI` and `SECRET_KEY`.
+1. create the local settings file with all the juicy secrets inside in `instance/config.py`. The two following options must be set: `SQLALCHEMY_DATABASE_URI` and `SECRET_KEY`. See next section.
 1. run the flask app: `flask run`
+
+
+
+## Creating a local DB for development
+
+1. Install Mysql (on MacOs: `brew install mysql`) and make sure it's running (on MacOS: `brew services start mysql`)
+2. Install a MySql client for python, for instance `mysqlclient` (`pip install mysqlclient`)
+3. Crete user and database on mysql:
+  1. Connect to MySQL: `mysql -u root`
+  2. Create user `CREATE USER '%USER%'@'localhost' IDENTIFIED BY '%PASSWORD%';`, replacing %USER% and %PASSWORD%
+  3. Create DB: `CREATE DATABASE %DB_NAME%;`, replacing %DB_NAME%
+  4. Give all privileges `GRANT ALL PRIVILEGES ON %DB_NAME% . * TO '%USER%'@'localhost';`, replacing %DB_NAME% and %USER%
+4. Edit your `config.py`:
+  1. Set `SECRET_KEY` to some random string
+  2. Set `SQLALCHEMY_DATABASE_URI` to `mysql://%USER%:%PASSWORD%@localhost/%DB_NAME%`
+5. Upgrade DB to correct state: `flask db upgrade`
