@@ -173,10 +173,14 @@ class AMIV_API_Interface:
 
         stats = OrderedDict()
         stats['Current Attendance'] = 0
+        stats['Remaining'] = len(self.last_signups)
         stats['Total Signups'] = len(self.last_signups)
         for u in self.last_signups:
             if u['checked_in'] is True:
                 stats['Current Attendance'] = stats['Current Attendance'] + 1
+                stats['Remaining'] = stats['Total Signups'] - stats['Current Attendance']
+                if stats['Remaining'] < 0:
+                    stats['Remaining'] = 0
 
         return stats
 
