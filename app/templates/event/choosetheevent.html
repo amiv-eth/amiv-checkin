@@ -41,7 +41,7 @@
                     {% if ev['has_PIN'] %}
                       <a class="table_link" href="{{ url_for('login.pin_login', _pin=ev['PIN']) }}"> login-PIN </a>
                     {% else %}
-                      <a class="table_link" href="{{ url_for('login.select_chooseevent', _id=ev['_id']) }}"> open </a>
+                      <a class="table_link" href="{{ url_for('event.setupevent', _id=ev['_id']) }}"> open </a>
                     {% endif %}
                 {% else %}
                       <a class="table_link" href="{{ url_for('login.pin_login', _pin=ev['PIN']) }}"> reopen </a>

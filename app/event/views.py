@@ -1,5 +1,6 @@
 # app/event/views.py
 from datetime import datetime
+import collections
 from flask import flash, abort, make_response, render_template
 from flask_login import login_required, current_user
 
@@ -8,6 +9,7 @@ from ..models import PresenceList
 
 from ..login.logic import beautify_event, logout_and_delete_pin
 from . import event_bp
+from .forms import EventTypeForm
 
 
 @event_bp.route('/choosetheevent', methods=['GET', 'POST'])
@@ -73,3 +75,46 @@ def choosetheevent():
     return make_response(render_template('event/choosetheevent.html',
                                          title='Choose Event',
                                          upcoming_events=upcoming_events))
+
+
+@event_bp.route('/setupevent/<string:_id>', methods=['GET', 'POST'])
+@login_required
+def setupevent(_id):
+    """
+    Handle requests to the /choosetheevent route
+    """
+
+    pl = current_user
+    conn = Event_Interface()
+    conn.token_login(pl.token)
+    conn.set_event(_id)
+    try:
+        evobj = conn.get_event()
+    except Exception as E:
+        flash("Could not get event: {}".format(_id), 'error')
+        return logout_and_delete_pin()
+
+    event_data = beautify_event(evobj)
+    event_data_to_show = {k: event_data[k] for k in event_data if k in ['title', 'catchphrase_en', 'description_en', 'price', 'time_start', 'time_end', 'spots', 'allow_email_signup', 'signup_count', 'signups_string']}
+    event_data_to_show = collections.OrderedDict(sorted(event_data_to_show.items()))
+
+    event_type_form = EventTypeForm()
+
+    if event_type_form.validate_on_submit():
+        event_type = event_type_form.eventtype.data
+        maxcount = event_type_form.maxcounter.data
+
+        if event_type == 'counter' and maxcount is None:
+            maxcount = 1
+
+        return make_response(render_template('event/event_setup.html',
+                                             title='Setup Event',
+                                             event_data=event_data_to_show,
+                                             form=event_type_form))
+
+
+
+    return make_response(render_template('event/event_setup.html',
+                                         title='Setup Event',
+                                         event_data=event_data_to_show,
+                                         form=event_type_form))
