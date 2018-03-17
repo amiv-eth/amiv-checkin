@@ -1,20 +1,47 @@
 # app/login/views.py
+import sys
 from datetime import datetime
 
-from flask import flash, redirect, render_template, url_for, request, abort, make_response
+from flask import flash, redirect, render_template, url_for, request, abort, make_response, app
 from flask_login import login_required, login_user, logout_user, current_user
 
 from . import login_bp, generate_secure_pin
 from .forms import PinLoginForm, CredentialsLoginForm
 from .. import db
 from ..models import PresenceList
-from ..connectors import create_connectors, get_connector_by_id, gvtool_id_string
+from ..connectors import create_connectors, get_connector_by_id, gvtool_id_string, Event_Interface
 from ..security.security import register_failed_login_attempt, register_login_success
+
+from ..event.views import choosetheevent
 
 
 @login_bp.route('/')
 def home():
     return redirect(url_for('login.login'))
+
+
+@login_bp.route('/login/pin/<string:_pin>')
+@login_required
+def pin_login(_pin):
+
+    # get all presence lists with given PIN
+    presencelists = PresenceList.query.filter_by(pin=_pin).all()
+
+    print("\n\n Presence lists: ", presencelists, [p.pin for p in presencelists], _pin, file=sys.stderr)
+
+    if len(presencelists) > 1:
+        # we have a database error
+        raise Exception('Multiple PresenceList with same PIN found!')
+
+    if len(presencelists) > 0:
+        pl = presencelists[0]
+        if pl.pin == int(_pin):
+            login_user(pl)
+            register_login_success()
+            return redirect(url_for('checkin.checkin'))
+
+    register_failed_login_attempt()
+    flash('Invalid PIN.', 'error')
 
 
 @login_bp.route('/login', methods=['GET', 'POST'])
@@ -64,6 +91,7 @@ def login():
 
         elif 'method_Cred' in request.values:
             if credform.validate_on_submit():
+                print(credform.backend)
 
                 # credential form was submitted, check connector type
                 conn = get_connector_by_id(connectors, credform.backend.data)
@@ -98,8 +126,8 @@ def login():
                 db.session.add(npl)
                 db.session.commit()
                 login_user(npl)
-                if (credform.backend.data == Event_Interface.id_string):
-                    redirect(url_for('event.choosetheevent'))
+                if credform.backend.data == Event_Interface.id_string:
+                    return redirect(url_for('event.choosetheevent'))
 
                 return redirect(url_for('login.chooseevent'))
 

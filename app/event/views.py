@@ -1,4 +1,13 @@
+# app/event/views.py
+from datetime import datetime
+from flask import flash, abort, make_response, render_template
+from flask_login import login_required, current_user
 
+from ..connectors import Event_Interface
+from ..models import PresenceList
+
+from ..login.logic import beautify_event, logout_and_delete_pin
+from . import event_bp
 
 
 @event_bp.route('/choosetheevent', methods=['GET', 'POST'])
@@ -9,9 +18,8 @@ def choosetheevent():
     """
 
     # get connector
-    connectors = create_connectors()
     pl = current_user
-    conn = get_connector_by_id(connectors, pl.conn_type)
+    conn = Event_Interface()
     conn.token_login(pl.token)
 
     # catch case where event_id is already assigned
@@ -26,7 +34,6 @@ def choosetheevent():
     found_events = []
     # query all presence lists for current event type
     existing_pls = PresenceList.query\
-        .filter(PresenceList.conn_type == conn.id_string)\
         .filter(PresenceList.event_id >= 0)\
         .all()
     for pl in existing_pls:
@@ -39,7 +46,7 @@ def choosetheevent():
             continue
         # we found a tracked event, add it to the list
         found_events.append(pl.event_id)
-        upcoming_events.append(beautify_event(evobj, {'event_ended': pl.event_ended}))
+        upcoming_events.append(beautify_event(evobj, {'event_ended': pl.event_ended, 'has_PIN': True, 'PIN':pl.pin}))
 
     # get upcoming events
     try:
@@ -49,7 +56,7 @@ def choosetheevent():
         return logout_and_delete_pin()
     for e in events:
         if e['_id'] not in found_events:
-            upcoming_events.append(beautify_event(e, {'event_ended': False}))
+            upcoming_events.append(beautify_event(e, {'event_ended': False, 'has_PIN' : False }))
 
     if len(not_found_events) > 0:
         flash('Warning: The following event IDs do '
@@ -62,17 +69,7 @@ def choosetheevent():
                              key=lambda k: k['time_start'] if ('time_start' in k) else datetime(1970, 1, 1),
                              reverse=True)
 
-    # check if we are running on GVs:
-    if conn.id_string == gvtool_id_string:
-        # when using the GV tool connector,
-        # we allow the user to create a new gv
-        show_new = True
-    else:
-        show_new = False
-
     # on GET, render page
-    return make_response(render_template('login/choosetheevent.html',
+    return make_response(render_template('event/choosetheevent.html',
                                          title='Choose Event',
-                                         upcoming_events=upcoming_events,
-                                         allow_create_new=show_new
-                                         ))
+                                         upcoming_events=upcoming_events))
