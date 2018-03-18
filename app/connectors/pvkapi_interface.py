@@ -87,8 +87,7 @@ class PVK_API_Interface:
             user_id = self._get_userid_from_legi(info)
         return user_id
 
-    def checkin_field(self, info):
-        """ Check in a user to a course by flipping the checked_in value """
+    def get_headers_filter_url(self,info):
         user_id = self._get_userid_from_info(info)
         if 'Error' in user_id:
             return False
@@ -101,6 +100,13 @@ class PVK_API_Interface:
         etag = r.json()['_etag']
         url = self.api_url + '/signups'
         header = {'If-Match': etag}
+
+        return header, _filter, url
+
+    def checkin_field(self, info):
+        """ Check in a user to a course by flipping the checked_in value """
+        header, _filter, url = self.get_headers_filter_url(info)
+
         payload = {"checked_in": "True"}
         r = requests.patch(url + _filter,
                            auth=self.auth_obj,
@@ -110,18 +116,8 @@ class PVK_API_Interface:
 
     def checkout_field(self, info):
         """ Check in a user to an event by flipping the checked_in value """
-        user_id = self._get_userid_from_info(info)
-        if 'Error' in user_id:
-            return False
-        _filter = ('?where={"nethz":"%s", "course":"%s"}'
-                   % user_id, self.course_id)
-        r = requests.get(self.api_url + '/signups' + _filter,
-                         auth=self.auth_obj)
-        if r.status_code != 200:
-            return False
-        etag = r.json()['_etag']
-        url = self.api_url + '/signups'
-        header = {'If-Match': etag}
+        header, _filter, url = self.get_headers_filter_url(info)
+
         payload = {"checked_in": "False"}
         r = requests.patch(url + _filter,
                            auth=self.auth_obj,

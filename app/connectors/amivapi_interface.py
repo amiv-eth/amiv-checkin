@@ -211,8 +211,7 @@ class AMIV_API_Interface:
         # success! we found exactly one user with the described info. Return it.
         return rj['_items'][0]
 
-    def checkin_field(self, info):
-        """ Check in a user to an event by flipping the checked_in value """
+    def get_signup(self, info):
         # find user according to info
         user_id = self._get_userinfo_from_info(info)['_id']
         # find the signup with the user
@@ -224,7 +223,14 @@ class AMIV_API_Interface:
         if int(rj['_meta']['total']) < 1:
             raise Exception("User {} not signed-up for event.".format(info))
         # found exactly one signup
-        rj = rj['_items'][0]
+        return rj['_items'][0]
+
+
+    def checkin_field(self, info):
+        """ Check in a user to an event by flipping the checked_in value """
+
+        rj = self.get_signup(info)
+
         if ('checked_in' in rj) and (rj['checked_in'] is True):
             raise Exception("User {} already checked in.".format(info))
         # create PATCH to check-in user
@@ -240,18 +246,9 @@ class AMIV_API_Interface:
 
     def checkout_field(self, info):
         """ Check out a user to an event by flipping the checked_in value """
-        # find user according to info
-        user_id = self._get_userinfo_from_info(info)['_id']
-        # find the singup with the user
-        r = self._api_get('/eventsignups?where={"user":"%s", "event":"%s"}' % (user_id, self.event_id))
-        rj = r.json()
-        # check numbers of signups
-        if int(rj['_meta']['total']) > 1:
-            raise Exception("More than one signup found for user: {}.".format(info))
-        if int(rj['_meta']['total']) < 1:
-            raise Exception("User {} not signed-up for event.".format(info))
-        # found exactly one signup
-        rj = rj['_items'][0]
+
+        rj = self.get_signup(info)
+
         if 'checked_in' not in rj:
             raise Exception("User {} never checked-in before.".format(info))
         if rj['checked_in'] is None:

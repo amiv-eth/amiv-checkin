@@ -170,11 +170,9 @@ class GV_Tool_Interface(AMIV_API_Interface):
 
     def checkin_field(self, info):
         """ Check in a user to an event by flipping the checked_in value """
-        apiuser = self._get_userinfo_from_info(info)
-        uid = apiuser['_id']
 
         # check if user already signed up
-        gvsus = GVSignup.query.filter_by(user_id=uid, gvevent_id=self.event_id).all()
+        gvsus = self.get_signups(info)
         # check numbers of signups
         if len(gvsus) > 1:
             raise Exception("More than one signup found for user: {}.".format(info))
@@ -193,13 +191,17 @@ class GV_Tool_Interface(AMIV_API_Interface):
         gvsu.set_user(apiuser)
         return self._clean_signup_obj(gvsu)
 
-    def checkout_field(self, info):
-        """ Check out a user to an event by flipping the checked_in value """
+    def get_signups(self, info):
         apiuser = self._get_userinfo_from_info(info)
         uid = apiuser['_id']
 
         # check if user already signed up
-        gvsus = GVSignup.query.filter_by(user_id=uid, gvevent_id=self.event_id).all()
+        return GVSignup.query.filter_by(user_id=uid, gvevent_id=self.event_id).all()
+
+    def checkout_field(self, info):
+        """ Check out a user to an event by flipping the checked_in value """
+
+        gvsus = self.get_signups(info)
         # check numbers of signups
         if len(gvsus) > 1:
             raise Exception("More than one signup found for user: {}.".format(info))

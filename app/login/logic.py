@@ -4,8 +4,10 @@ from flask_login import login_required, logout_user, current_user
 
 from ..models import PresenceList
 from .. import db
+from . import login_bp
 
 
+@login_bp.route('/logout_and_delete_pin')
 @login_required
 def logout_and_delete_pin():
     """
