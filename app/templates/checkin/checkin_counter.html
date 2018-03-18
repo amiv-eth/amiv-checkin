@@ -1,0 +1,116 @@
+{% import "bootstrap/utils.html" as utils %}
+{% import "bootstrap/wtf.html" as wtf %}
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block javascript %}
+<script type="text/javascript">
+    {% include "checkin/update_tables.js" %}
+    {% include "checkin/confirm_new_pin.js" %}
+    {% include "checkin/confirm_close_event.js" %}
+</script>
+{% endblock %}
+
+{% block body %}
+<div class="center">
+
+    <nav class="navbar navbar-default navbar-fixed-top topnav" role="navigation">
+        <div class="container topnav">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse"
+                        data-target="#bs-example-navbar-collapse-1">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand topnav" href="{{ url_for('login.login') }}">AMIV Check-In</a>
+            </div>
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a href="{{ url_for('login.logout') }}">Logout</a></li>
+                    <li><a id="change_pin_link" href="#" onclick="confirm_new_pin();return false;">Change PIN</a></li>
+                    <li><a><i class="fa fa-user"></i> Your current PIN: {{ current_user.pin }}</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="content-section"><br/>
+
+        <h1>{{ event_title }}</h1>
+        <h3>{{ event_start }}</h3>
+        {% if event_ended %}
+        <h4>(Event closed. No changes allowed.)</h4>
+        {% endif %}
+
+        {{ utils.flashed_messages(container=False) }}<br/>
+
+        <div id="sync_warning" style="display:none">
+            <div class="alert alert-warning" id="sync_warning_alert">
+                <strong>Warning!</strong> Could not fetch new data from server. List might be outdated. <div id="sync_warning_reason"></div>
+            </div>
+            <br/>
+        </div>
+
+        {% if not event_ended %}
+        {{ wtf.quick_form(form, form_type='horizontal', horizontal_columns=('md', 2, 10)) }}
+        <hr class="intro-divider">
+        {% endif %}
+
+        <!--table class="table table-striped table-bordered">
+            <thead>
+            <tr>
+                <th colspan="2"> Statistics</th>
+            </tr>
+            </thead>
+            <tbody id="tbody_statistics">
+            <tr>
+                <td width="85%"> Loading... </td>
+                <td width="15%"> </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <hr class="intro-divider"-->
+
+        <table class="table table-striped table-bordered">
+            <thead>
+            <tr>
+                <th width="25%"> Name </th>
+                <th width="10%"> nethz </th>
+                <th width="10%"> Legi </th>
+                <th width="30%"> e-Mail </th>
+                <th width="15%"> Membership </th>
+                <th width="10%"> Count </th>
+            </tr>
+            </thead>
+            <tbody id="tbody_counts">
+            <tr>
+                <td> Loading... </td>
+                <td> </td>
+                <td> </td>
+                <td> </td>
+                <td> </td>
+                <td> </td>
+            </tr>
+            </tbody>
+        </table>
+
+        {% if log_download %}
+        <br/>
+        <a href="{{ url_for('gvtool.export_csv') }}" class="center-block">
+            <button class="btn btn-default center-block"> Export Attendance Log as .csv File </button>
+        </a>
+        {% endif %}
+
+        {% if not event_ended %}
+        <br/>
+        <a id="close_event_link" href="#" onclick="confirm_close_event();return false;" class="center-block">
+            <button class="btn btn-default center-block"> Check-out all Participants and Close Event </button>
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

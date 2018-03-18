@@ -4,7 +4,7 @@ from flask import flash, redirect, render_template, url_for, request, make_respo
 from flask_login import login_required, logout_user, current_user
 
 from . import checkin_bp
-from .forms import CheckForm, CSRFCheckForm
+from .forms import CheckForm, CSRFCheckForm, CounterForm
 from .. import db
 from ..login import generate_secure_pin
 from ..models import PresenceList
@@ -12,14 +12,13 @@ from ..connectors import create_connectors, get_connector_by_id, gvtool_id_strin
 from ..security.security import register_failed_login_attempt, register_login_success
 
 
-@checkin_bp.route('/checkin', methods=['GET', 'POST'])
+@checkin_bp.route('/checkin/<string:_event_type>', methods=['GET', 'POST'])
 @login_required
-def checkin():
+def checkin(_event_type):
     """
     Main Webpage for all the signups. Also takes requests
     from the manual check-in / check-out form.
     """
-
     # get connector
     connectors = create_connectors()
     pl = current_user
@@ -33,6 +32,59 @@ def checkin():
     # event is set, setup connector
     conn.set_event(pl.event_id)
 
+    # fetch title and description
+    try:
+        evobj = conn.get_event()
+        event_title = evobj['title']
+        if 'time_start' in evobj:
+            event_start = evobj['time_start'].strftime('%d.%m.%Y %H:%M')
+        else:
+            event_start = ""
+    except Exception as E:
+        flash('Error: ' + str(E), 'error')
+        event_title = "< unknown >"
+        event_start = ""
+
+    if _event_type == 'in_out':
+        return checkin_in_out(conn, pl, evobj, event_title, event_start)
+    elif _event_type == 'counter':
+        return checkin_counter(conn, pl, evobj, event_title, event_start)
+
+
+def is_signup_needed(evobj):
+    return ('spots' in evobj and evobj['spots'] is not None and evobj['spots'] >= 0)
+
+
+def checkin_counter(conn, pl, evobj, event_title, event_start):
+
+    counterform = CounterForm()
+
+    # check form submission
+    if counterform.validate_on_submit():
+        info = counterform.datainput.data
+
+        if pl.event_ended:
+            raise Exception('Event ended. No changes allowed.')
+
+        try:
+            count = conn.count_increment(info, is_signup_needed(evobj),
+                                         pl.event_max_counter)
+            flash('member {:s} counted {} times'.format(info, count))
+
+        except Exception as E:
+            flash('Error: ' + str(E), 'error')
+
+    # load webpage
+    return make_response(render_template('checkin/checkin_counter.html',
+                                         form=counterform,
+                                         event_ended=pl.event_ended,
+                                         event_title=event_title,
+                                         event_start=event_start,
+                                         csrfcheckform=CSRFCheckForm(),
+                                         title='AMIV Check-In Counter'))
+
+
+def checkin_in_out(conn, pl, evobj, event_title, event_start):
     # create form
     checkform = CheckForm()
 
@@ -54,18 +106,6 @@ def checkin():
         except Exception as E:
             flash('Error: '+str(E), 'error')
 
-    # fetch title and description
-    try:
-        evobj = conn.get_event()
-        event_title = evobj['title']
-        if 'time_start' in evobj:
-            event_start = evobj['time_start'].strftime('%d.%m.%Y %H:%M')
-        else:
-            event_start = ""
-    except Exception as E:
-        flash('Error: ' + str(E), 'error')
-        event_title = "< unknown >"
-        event_start = ""
 
     # enable button for log download if we are in GV mode
     if conn.id_string == gvtool_id_string:
@@ -82,6 +122,7 @@ def checkin():
                                          log_download=show_log_btn,
                                          csrfcheckform=CSRFCheckForm(),
                                          title='AMIV Check-In'))
+
 
 
 @checkin_bp.route('/checkin_update_data')
@@ -123,6 +164,11 @@ def checkin_update_data():
     except Exception as E:
         abort(make_response('Error with API access: {:s}'.format(str(E)), 502))
 
+    attendee_counts = []
+    if pl.event_type == 'counter':
+        attendee_counts = conn.get_attendee_counts()
+
+
     # fetch statistics
     try:
         stats = conn.get_statistics()
@@ -139,7 +185,7 @@ def checkin_update_data():
         abort(make_response('Error with API access: {:s}'.format(str(E)), 502))
     evobj['event_type'] = conn.human_string  # add description of event type
 
-    j = {'signups': signups, 'statistics': statsl, 'eventinfos': evobj}
+    j = {'signups': signups, 'statistics': statsl, 'eventinfos': evobj, 'attendee_counts': attendee_counts}
     return make_response(jsonify(j))
 
 
@@ -206,7 +252,7 @@ def close_event():
         conn.checkout_all_remaining()
     except Exception as E:
         flash('Error: ' + str(E), 'error')
-        return redirect(url_for('checkin.checkin'))
+        return redirect(url_for('checkin.checkin', _event_type='in_out'))
 
     # mark event as ended
     pl.event_ended = True
@@ -214,4 +260,4 @@ def close_event():
 
     # inform user and redirect
     flash('Event closed.')
-    return redirect(url_for('checkin.checkin'))
+    return redirect(url_for('checkin.checkin', _event_type='in_out'))

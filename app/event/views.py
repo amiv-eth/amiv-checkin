@@ -1,13 +1,14 @@
 # app/event/views.py
 from datetime import datetime
 import collections
-from flask import flash, abort, make_response, render_template
+from flask import (flash, abort, make_response, render_template,
+                   redirect, url_for)
 from flask_login import login_required, current_user
 
 from ..connectors import Event_Interface
 from ..models import PresenceList
-
 from ..login.logic import beautify_event, logout_and_delete_pin
+from .. import db
 from . import event_bp
 from .forms import EventTypeForm
 
@@ -107,14 +108,25 @@ def setupevent(_id):
         if event_type == 'counter' and maxcount is None:
             maxcount = 1
 
-        return make_response(render_template('event/event_setup.html',
-                                             title='Setup Event',
-                                             event_data=event_data_to_show,
-                                             form=event_type_form))
-
-
+        return process_event_setup(_id, event_type, maxcount)
 
     return make_response(render_template('event/event_setup.html',
                                          title='Setup Event',
                                          event_data=event_data_to_show,
                                          form=event_type_form))
+
+
+@login_required
+def process_event_setup(_id, event_type, maxcount):
+
+    pl = current_user
+
+    pl.event_type = event_type
+
+    if event_type == 'counter':
+        pl.event_max_counter = maxcount
+
+    pl.event_id = _id
+    db.session.commit()
+
+    return redirect(url_for('checkin.checkin', _event_type=event_type))

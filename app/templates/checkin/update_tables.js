@@ -46,6 +46,21 @@ function update_data() {
             }
             $('#tbody_signups').html(newRows);
 
+            var newCounts = "";
+            console.log(data.attendee_counts)
+
+            for (var i in data.attendee_counts) {
+                console.log(data.attendee_counts[i])
+                newCounts += "<tr><td>" + data.attendee_counts[i][0].firstname + " " + data.attendee_counts[i][0].lastname + "</td>"
+                newCounts += "<td>" + data.attendee_counts[i][0].nethz + "</td>"
+                newCounts += "<td>" + beautify_legi(data.attendee_counts[i][0].legi) + "</td>"
+                newCounts += "<td>" + data.attendee_counts[i][0].email + "</td>"
+                newCounts += "<td>" + beautify_membership(data.attendee_counts[i][0].membership) + "</td>"
+                newCounts += "<td>" + data.attendee_counts[i][1] + "</td></tr>";
+            }
+            $('#tbody_counts').html(newCounts);
+
+
             var newStats = "";
             for (var i in data.statistics) {
                 newStats += "<tr><td width='85%'>" + data.statistics[i].key + "</td>"

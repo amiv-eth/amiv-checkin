@@ -16,6 +16,13 @@ class CheckForm(FlaskForm):
                             render_kw={'autofocus': True, 'onFocus': 'this.select();'})
     submit = SubmitField('Submit')
 
+class CounterForm(FlaskForm):
+
+    datainput = StringField('Legi #, nethz, or email',
+                            validators=[DataRequired()],
+                            render_kw={'autofocus': True, 'onFocus': 'this.select();'})
+    submit = SubmitField('Submit')
+
 
 class CSRFCheckForm(FlaskForm):
     """

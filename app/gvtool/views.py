@@ -48,7 +48,7 @@ def new_gv():
         pl.event_id = gv._id
         db.session.commit()
 
-        return redirect(url_for('checkin.checkin'))
+        return redirect(url_for('checkin.checkin', _event_type='in_out'))
 
     # load login template
     return make_response(render_template('gvtool/newgv.html',

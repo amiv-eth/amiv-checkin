@@ -19,7 +19,7 @@ def create_connectors():
     if_5 = Event_Interface()
     # create list and return
     #connectors = [if_1, if_2, if_3, if_4]
-    connectors = [if_1, if_3, if_5]
+    connectors = [if_5, if_1, if_3]
     return connectors
 
 

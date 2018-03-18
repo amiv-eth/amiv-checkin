@@ -40,7 +40,10 @@ def beautify_event(raw_event, additional_fields={}):
     :return: dict with signup_string and time_string added
     """
     if 'signup_count' in raw_event:
-        spots = 'unlimited' if raw_event['spots'] == 0 else raw_event['spots']
+        if 'spots' not in raw_event or raw_event['spots'] == 0 or raw_event['spots'] is None:
+            spots = 'unlimited'
+        else:
+            spots = raw_event['spots']
         raw_event['signups_string'] = "{} / {}".format(raw_event['signup_count'], spots)
     if 'time_start' in raw_event:
         raw_event['time_string'] = raw_event['time_start'].strftime('%d.%m.%Y %H:%M')

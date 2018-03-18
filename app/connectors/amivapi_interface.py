@@ -113,10 +113,11 @@ class AMIV_API_Interface:
             low_bound = low_bound.strftime(self.datetime_format)
             up_bound = datetime.today() + timedelta(days=100)
             up_bound = up_bound.strftime(self.datetime_format)
-            _range = '{"time_start":{"$gt":"'+low_bound+'","$lt":"'+up_bound+'"}, "spots":{"$gte":0}}'
+            _range = '{"time_start":{"$gt":"' + low_bound + '","$lt":"' + up_bound + '"}}'
         else:
             # debug case: do not filter for time, just display all
-            _range = '{"spots":{"$gte":0}}'
+            # _range = '{"spots":{"$gte":0}}'
+            _range = '{}'
         r = self._api_get('/events?where=' + _range)
         _events = [x for x in r.json()['_items']]
 

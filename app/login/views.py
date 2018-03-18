@@ -12,8 +12,6 @@ from ..models import PresenceList
 from ..connectors import create_connectors, get_connector_by_id, gvtool_id_string, Event_Interface
 from ..security.security import register_failed_login_attempt, register_login_success
 
-from ..event.views import choosetheevent
-
 
 @login_bp.route('/')
 def home():
@@ -38,7 +36,7 @@ def pin_login(_pin):
         if pl.pin == int(_pin):
             login_user(pl)
             register_login_success()
-            return redirect(url_for('checkin.checkin'))
+            return redirect(url_for('checkin.checkin', _event_type='in_out'))
 
     register_failed_login_attempt()
     flash('Invalid PIN.', 'error')
@@ -52,7 +50,7 @@ def login():
 
     # check if user is logged in and redirect if necessary
     if current_user.is_authenticated:
-        return redirect(url_for('checkin.checkin'))
+        return redirect(url_for('checkin.checkin', _event_type='in_out'))
 
     # create forms
     pinform = PinLoginForm()
@@ -84,7 +82,7 @@ def login():
                     if pl.pin == inputpin:
                         login_user(pl)
                         register_login_success()
-                        return redirect(url_for('checkin.checkin'))
+                        return redirect(url_for('checkin.checkin', _event_type='in_out'))
 
                 register_failed_login_attempt()
                 flash('Invalid PIN.', 'error')
@@ -280,7 +278,7 @@ def select_chooseevent(_id):
     # ok, new event chosen. Set event_id in current PresenceList and go further
     pl.event_id = evobj['_id']
     db.session.commit()
-    return redirect(url_for('checkin.checkin'))
+    return redirect(url_for('checkin.checkin', _event_type='in_out'))
 
 
 @login_bp.route('/logout')
