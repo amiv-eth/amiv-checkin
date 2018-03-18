@@ -184,6 +184,7 @@ def checkin_update_data():
     except Exception as E:
         abort(make_response('Error with API access: {:s}'.format(str(E)), 502))
     evobj['event_type'] = conn.human_string  # add description of event type
+    evobj['checkin_type'] = pl.event_type 
 
     j = {'signups': signups, 'statistics': statsl, 'eventinfos': evobj, 'attendee_counts': attendee_counts}
     return make_response(jsonify(j))
