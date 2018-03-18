@@ -36,7 +36,8 @@ def pin_login(_pin):
         if pl.pin == int(_pin):
             login_user(pl)
             register_login_success()
-            return redirect(url_for('checkin.checkin', _event_type='in_out'))
+            return redirect(url_for('checkin.checkin',
+                                    _event_type=pl.event_type))
 
     register_failed_login_attempt()
     flash('Invalid PIN.', 'error')
@@ -50,7 +51,8 @@ def login():
 
     # check if user is logged in and redirect if necessary
     if current_user.is_authenticated:
-        return redirect(url_for('checkin.checkin', _event_type='in_out'))
+        pl = current_user
+        return redirect(url_for('checkin.checkin', _event_type=pl.event_type))
 
     # create forms
     pinform = PinLoginForm()
@@ -82,7 +84,8 @@ def login():
                     if pl.pin == inputpin:
                         login_user(pl)
                         register_login_success()
-                        return redirect(url_for('checkin.checkin', _event_type='in_out'))
+                        return redirect(url_for('checkin.checkin',
+                                                _event_type=pl.event_type))
 
                 register_failed_login_attempt()
                 flash('Invalid PIN.', 'error')
@@ -145,13 +148,17 @@ def beautify_event(raw_event, additional_fields={}):
     :return: dict with signup_string and time_string added
     """
     if 'signup_count' in raw_event:
-        spots = 'unlimited' if raw_event['spots'] == 0 else raw_event['spots']
+        if 'spots' not in raw_event or raw_event['spots'] == 0 or raw_event['spots'] is None:
+            spots = 'unlimited'
+        else:
+            spots = raw_event['spots']
         raw_event['signups_string'] = "{} / {}".format(raw_event['signup_count'], spots)
     if 'time_start' in raw_event:
         raw_event['time_string'] = raw_event['time_start'].strftime('%d.%m.%Y %H:%M')
     for k in additional_fields:
         raw_event[k] = additional_fields[k]
     return raw_event
+
 
 
 @login_bp.route('/chooseevent', methods=['GET', 'POST'])

@@ -72,7 +72,10 @@ class AMIV_API_Interface:
             ev['title'] = raw_event['title_en']
         else:
             ev['title'] = raw_event['title_de']
-        ev['spots'] = raw_event['spots']
+        if 'spots' not in raw_event or raw_event['spots'] == 0 or raw_event['spots'] is None:
+            ev['spots'] = 'unlimited'
+        else:
+            ev['spots'] = raw_event['spots']
         if 'signup_count' in raw_event:
             ev['signup_count'] = raw_event['signup_count']
         if 'time_start' in raw_event:

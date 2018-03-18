@@ -252,7 +252,7 @@ def close_event():
         conn.checkout_all_remaining()
     except Exception as E:
         flash('Error: ' + str(E), 'error')
-        return redirect(url_for('checkin.checkin', _event_type='in_out'))
+        return redirect(url_for('checkin.checkin', _event_type=pl.event_type))
 
     # mark event as ended
     pl.event_ended = True
@@ -260,4 +260,4 @@ def close_event():
 
     # inform user and redirect
     flash('Event closed.')
-    return redirect(url_for('checkin.checkin', _event_type='in_out'))
+    return redirect(url_for('checkin.checkin', _event_type=pl.event_type))
