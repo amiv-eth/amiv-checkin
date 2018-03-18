@@ -79,7 +79,7 @@ def mutate():
                 return make_response(jsonify(rd), 200)
 
             except Exception as E:
-                abort(make_response('Error while processing signup for counter event: ' + str(E), 400))
+                abort(make_response(str(E), 400))
         else:
             abort(make_response(
                 'Checkmode {} invalid for this event type {} invalid.'.format(

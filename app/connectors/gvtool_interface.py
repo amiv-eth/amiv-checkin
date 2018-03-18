@@ -10,8 +10,8 @@ from math import ceil
 from app import db
 from .amivapi_interface import AMIV_API_Interface
 from .gvtool_models import GVEvent, GVSignup, GVLog
-from ..connectors import gvtool_id_string
 
+gvtool_id_string = 'conn_gvtool'
 
 class GV_Tool_Interface(AMIV_API_Interface):
     """ Interface class to represent GVs with member data from the AMIV API """

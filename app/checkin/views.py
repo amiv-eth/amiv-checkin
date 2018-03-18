@@ -52,7 +52,7 @@ def checkin(_event_type):
 
 
 def is_signup_needed(evobj):
-    return ('spots' in evobj and evobj['spots'] is not None and evobj['spots'] >= 0)
+    return 'spots' in evobj and evobj['spots'] is not None and evobj['spots'] >= 0
 
 
 def checkin_counter(conn, pl, evobj, event_title, event_start):

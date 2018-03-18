@@ -5,7 +5,7 @@ from flask import (flash, abort, make_response, render_template,
                    redirect, url_for)
 from flask_login import login_required, current_user
 
-from ..connectors import Event_Interface
+from ..connectors import Event_Interface, gvtool_id_string
 from ..models import PresenceList
 from ..login.logic import beautify_event, logout_and_delete_pin
 from .. import db
@@ -38,6 +38,7 @@ def choosetheevent():
     # query all presence lists for current event type
     existing_pls = PresenceList.query\
         .filter(PresenceList.event_id >= 0)\
+        .filter(PresenceList.conn_type != gvtool_id_string)\
         .all()
     for pl in existing_pls:
         # retreive event information from data source

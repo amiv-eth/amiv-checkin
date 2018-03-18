@@ -70,7 +70,7 @@ class Event_Interface(AMIV_API_Interface):
             event_count = event_counts[0]
             if event_count.count > maxcount-1:
                 raise Exception(
-                    "User {} reached event count limit. No SOUP for you!".format(
+                    "User {} reached event count limit.".format(
                         info))
 
             event_count.count += 1

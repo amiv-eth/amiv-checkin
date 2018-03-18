@@ -26,8 +26,6 @@ def pin_login(_pin):
     # get all presence lists with given PIN
     presencelists = PresenceList.query.filter_by(pin=_pin).all()
 
-    print("\n\n Presence lists: ", presencelists, [p.pin for p in presencelists], _pin, file=sys.stderr)
-
     if len(presencelists) > 1:
         # we have a database error
         raise Exception('Multiple PresenceList with same PIN found!')
@@ -53,7 +51,7 @@ def login():
     # check if user is logged in and redirect if necessary
     if current_user.is_authenticated:
         pl = current_user
-        return redirect(url_for('checkin.checkin', _event_type=pl.event_type))
+        return pin_login(pl.pin)
 
     # create forms
     pinform = PinLoginForm()
@@ -93,45 +91,7 @@ def login():
 
         elif 'method_Cred' in request.values:
             if credform.validate_on_submit():
-                print(credform.backend)
-
-                # credential form was submitted, check connector type
-                conn = get_connector_by_id(connectors, credform.backend.data)
-
-                # try to validate against connector
-                un = credform.username.data
-                pw = credform.password.data
-                try:
-                    token = conn.login(un, pw)
-                except Exception as E:
-                    register_failed_login_attempt()
-                    flash(str(E), 'error')
-                    return redirect(url_for('login.login'))
-
-                # credentials are valid
-                register_login_success()
-
-                # create new user! Create new pin and check if already set.
-                retrycnt = 1000
-                while retrycnt > 0:
-                    # create secure new random pin
-                    pin = generate_secure_pin()
-                    if len(PresenceList.query.filter_by(pin=pin).all()) == 0:
-                        break
-                    retrycnt = retrycnt-1
-                if retrycnt == 0:
-                    print("Could not find a free pin! Delete some PresenceList from DB!")
-                    abort(500)
-
-                # create new user account
-                npl = PresenceList(conn_type=conn.id_string, pin=pin, token=token, event_id=None)
-                db.session.add(npl)
-                db.session.commit()
-                login_user(npl)
-                if credform.backend.data == Event_Interface.id_string:
-                    return redirect(url_for('event.choosetheevent'))
-
-                return redirect(url_for('login.chooseevent'))
+                return process_credential_login(connectors, credform)
 
         else:
             print('Did not find correct hidden value in POST request.')
@@ -139,6 +99,43 @@ def login():
 
     # load login template
     return make_response(render_template('login/login.html', pinform=pinform, credform=credform, title='Login'))
+
+
+def process_credential_login(connectors, credform):
+    # credential form was submitted, check connector type
+    conn = get_connector_by_id(connectors, credform.backend.data)
+    # try to validate against connector
+    un = credform.username.data
+    pw = credform.password.data
+    try:
+        token = conn.login(un, pw)
+    except Exception as E:
+        register_failed_login_attempt()
+        flash(str(E), 'error')
+        return redirect(url_for('login.login'))
+
+    # credentials are valid
+    register_login_success()
+    # create new user! Create new pin and check if already set.
+    retrycnt = 1000
+    while retrycnt > 0:
+        # create secure new random pin
+        pin = generate_secure_pin()
+        if len(PresenceList.query.filter_by(pin=pin).all()) == 0:
+            break
+        retrycnt -= 1
+    if retrycnt == 0:
+        print("Could not find a free pin! Delete some PresenceList from DB!")
+        abort(500)
+
+    # create new user account
+    npl = PresenceList(conn_type=conn.id_string, pin=pin, token=token, event_id=None)
+    db.session.add(npl)
+    db.session.commit()
+    login_user(npl)
+    if credform.backend.data == Event_Interface.id_string:
+        return redirect(url_for('event.choosetheevent'))
+    return redirect(url_for('login.chooseevent'))
 
 
 @login_bp.route('/chooseevent', methods=['GET', 'POST'])
