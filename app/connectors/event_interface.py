@@ -92,7 +92,8 @@ class Event_Interface(AMIV_API_Interface):
                  'nethz': r['nethz'],
                  'email': r['email'],
                  'legi': r['legi'],
-                 'membership': r['membership']}
+                 'membership': r['membership'],
+                 'user_id': ec.user_id}
 
             attendee_counts.append((r, ec.count))
 

@@ -168,6 +168,12 @@ def checkin_update_data():
     if pl.event_type == 'counter':
         attendee_counts = conn.get_attendee_counts()
 
+    # Add counts to signups
+    for su in signups:
+        for cnt, attendee in attendee_counts:
+            if attendee['user_id'] == signups['user_id']:
+                su['count'] = cnt
+                break
 
     # fetch statistics
     try:
@@ -184,7 +190,7 @@ def checkin_update_data():
     except Exception as E:
         abort(make_response('Error with API access: {:s}'.format(str(E)), 502))
     evobj['event_type'] = conn.human_string  # add description of event type
-    evobj['checkin_type'] = pl.event_type 
+    evobj['checkin_type'] = pl.event_type
 
     j = {'signups': signups, 'statistics': statsl, 'eventinfos': evobj, 'attendee_counts': attendee_counts}
     return make_response(jsonify(j))
