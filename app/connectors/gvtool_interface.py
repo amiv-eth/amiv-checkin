@@ -117,12 +117,12 @@ class GV_Tool_Interface(AMIV_API_Interface):
 
         stats = OrderedDict()
         stats['Regular Members'] = 0
+        stats['Total Attendance'] = 0
         stats['Extraordinary Members'] = 0
         stats['Honorary Members'] = 0
         stats['Total Members Present'] = 0
         stats['Current Absolute Majority'] = 0
         stats['Total Non-Members Present'] = 0
-        stats['Total Attendance'] = 0
         stats['Maximum Attendance'] = len(self.last_signups)
         total_att = 0
 

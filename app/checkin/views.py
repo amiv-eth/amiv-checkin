@@ -170,8 +170,8 @@ def checkin_update_data():
 
     # Add counts to signups
     for su in signups:
-        for cnt, attendee in attendee_counts:
-            if attendee['user_id'] == signups['user_id']:
+        for attendee, cnt in attendee_counts:
+            if attendee['user_id'] == su['user_id']:
                 su['count'] = cnt
                 break
 
