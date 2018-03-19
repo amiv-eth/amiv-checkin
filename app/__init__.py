@@ -11,9 +11,6 @@ from werkzeug.contrib.fixers import ProxyFix
 # local imports
 from config import app_config
 
-import pymysql
-pymysql.install_as_MySQLdb()
-
 # db variable initialization
 db = SQLAlchemy()
 

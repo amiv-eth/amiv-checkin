@@ -80,6 +80,7 @@ def checkin_counter(conn, pl, evobj, event_title, event_start):
                                          event_ended=pl.event_ended,
                                          event_title=event_title,
                                          event_start=event_start,
+                                         max_counter=pl.event_max_counter,
                                          csrfcheckform=CSRFCheckForm(),
                                          title='AMIV Check-In Counter'))
 

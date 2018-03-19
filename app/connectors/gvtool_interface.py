@@ -13,6 +13,7 @@ from .gvtool_models import GVEvent, GVSignup, GVLog
 
 gvtool_id_string = 'conn_gvtool'
 
+
 class GV_Tool_Interface(AMIV_API_Interface):
     """ Interface class to represent GVs with member data from the AMIV API """
     def __init__(self):
@@ -171,6 +172,9 @@ class GV_Tool_Interface(AMIV_API_Interface):
     def checkin_field(self, info):
         """ Check in a user to an event by flipping the checked_in value """
 
+        apiuser = self._get_userinfo_from_info(info)
+        uid = apiuser['_id']
+
         # check if user already signed up
         gvsus = self.get_signups(info)
         # check numbers of signups
@@ -200,6 +204,7 @@ class GV_Tool_Interface(AMIV_API_Interface):
 
     def checkout_field(self, info):
         """ Check out a user to an event by flipping the checked_in value """
+        apiuser = self._get_userinfo_from_info(info)
 
         gvsus = self.get_signups(info)
         # check numbers of signups
