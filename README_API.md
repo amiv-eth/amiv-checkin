@@ -1,6 +1,8 @@
 # API Endpoints Documentation
 
-This is not very important if you do not want to build your own software interfacing with this webapp.
+_This is not very important if you do not want to build your own software interfacing with this webapp._
+
+To test the responses quickly, use Postman (getpostman.com) and create a GET/POST request to the url of a running checkin server with the extension (eg http://checkin.amiv.ethz.ch/checkpin), ensure to set pin etc in th header.
 
 There are three endpoints available:
 
@@ -48,41 +50,56 @@ Responses:
 - `HTTP 401` : on invalid pin or login failure
 - `HTTP 200` : on success
 
-In the response body, there is `application/json` content with two sections: `signups` and `statistics`. Example response:
+In the response body, there is `application/json` content with two sections: `signups` and `statistics`. Example response (for a GV in this case):
 ```json
 {
-  "signups": [
-    {
-      "_id": "5a2285d4977d36000aba4f15", 
-      "checked_in": true, 
-      "email": "pablo573798586@example.com", 
-      "firstname": "Pablo573798584", 
-      "lastname": "AMIV573798585", 
-      "legi": null, 
-      "membership": "extraordinary", 
-      "nethz": "user573798583"
-    }, 
-    {
-      "_id": "5a2285d4977d36000aba4ee9", 
-      "checked_in": false, 
-      "email": "pablo573798402@example.com", 
-      "firstname": "Pablo573798400", 
-      "lastname": "AMIV573798401", 
-      "legi": null, 
-      "membership": "honorary", 
-      "nethz": "user573798399"
-    }, 
-    ... and many more ... 
-  ], 
-  "statistics": [
-    {
-      "key": "Total Signups", 
-      "value": 15
-    }, 
-    {
-      "key": "Current Attendance", 
-      "value": 2
-    }
-  ]
+    "eventinfos": {
+        "_id": "1",
+        "description": "asasfdfs",
+        "event_type": "AMIV General Assemblies",
+        "signup_count": 1,
+        "spots": 0,
+        "time_start": "Sat, 17 Mar 2018 10:31:52 GMT",
+        "title": "Test GV - Coding WE"
+    },
+    "signups": [
+        {
+            "checked_in": true,
+            "email": "pablo@amivemail.ch",
+            "firstname": "pablo",
+            "lastname": "PVK",
+            "legi": "12121212",
+            "membership": "regular",
+            "nethz": "pablo",
+            "signup_id": 1,
+            "user_id": "59eb616cedcb11000ae5ecde"
+        },
+        {
+          "_id": "5a2285d4977d36000aba4ee9", 
+          "checked_in": false, 
+          "email": "pablo573798402@example.com", 
+          "firstname": "Pablo573798400", 
+          "lastname": "AMIV573798401", 
+          "legi": null, 
+          "membership": "honorary", 
+          "nethz": "user573798399"
+        }, 
+        ... and many more ... 
+    ],
+    "statistics": [
+        {
+            "key": "Regular Members",
+            "value": 1
+        },
+        {
+            "key": "Extraordinary Members",
+            "value": 0
+        },
+        {
+            "key": "Honorary Members",
+            "value": 0
+        }
+        ... etc ...
+    ]
 }
 ``` 
