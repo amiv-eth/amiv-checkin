@@ -46,12 +46,10 @@ def mutate():
     # check-in/-out user
     try:
         if checkmode == 'in':
-            su = conn.checkin_field(info)
-            rd = {'message': '{:s} member checked-IN!'.format(su['membership'].upper()), 'signup': su}
+            rd = conn.checkin_field(info)
             return make_response(jsonify(rd), 200)
         else:
-            su = conn.checkout_field(info)
-            rd = {'message': '{:s} member checked-OUT!'.format(su['membership'].upper()), 'signup': su}
+            rd = conn.checkout_field(info)
             return make_response(jsonify(rd), 200)
     except Exception as E:
         abort(make_response(str(E), 400))

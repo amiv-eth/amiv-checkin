@@ -4,7 +4,7 @@ function hide_flash_messages() {
 }
 
 function beautify_legi(rawlegi) {
-    if (rawlegi == null) {
+    if (rawlegi === null) {
         legi = "unknown";
     } else {
         legi = rawlegi;
@@ -13,7 +13,7 @@ function beautify_legi(rawlegi) {
 }
 
 function beautify_checkin(rawchecked_in) {
-    if (rawchecked_in == null) {
+    if (rawchecked_in === null) {
         checked_in = "-";
     } else if(rawchecked_in === true) {
         checked_in = "IN";
@@ -42,7 +42,11 @@ function update_data() {
                 newRows += "<td>" + beautify_legi(data.signups[i].legi) + "</td>"
                 newRows += "<td>" + data.signups[i].email + "</td>"
                 newRows += "<td>" + beautify_membership(data.signups[i].membership) + "</td>"
-                newRows += "<td>" + beautify_checkin(data.signups[i].checked_in) + "</td></tr>";
+                if (data.signups[i].hasOwnProperty('checked_in')) {
+                    newRows += "<td>" + beautify_checkin(data.signups[i].checked_in) + "</td></tr>";
+                } else if (data.signups[i].hasOwnProperty('freebies_taken')) {
+                    newRows += "<td>" + data.signups[i].freebies_taken + "</td></tr>";
+                }
             }
             $('#tbody_signups').html(newRows);
 

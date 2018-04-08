@@ -26,7 +26,7 @@ class Freebies_Interface(AMIV_API_Interface):
         ev = dict()
         ev['_id'] = str(raw_obj._id)
         ev['title'] = raw_obj.title
-        ev['spots'] = 0  # GVs are always unlimited
+        ev['spots'] = 0  # Freebies are always unlimited
         ev['signup_count'] = len(raw_obj.signups)
         ev['time_start'] = raw_obj.time_start
         ev['description'] = raw_obj.description
@@ -141,18 +141,21 @@ class Freebies_Interface(AMIV_API_Interface):
             if (fbsu.freebies_taken is not None) and (fbsu.freebies_taken >= fbsu.FreebieEvent.max_freebies):
                 raise Exception('Member reached maximum Freebies!')
             fbsu.freebies_taken = fbsu.freebies_taken + 1
-            db.Session.commit()
+            db.session.commit()
         if len(fbsus) < 1:
             # user not yet in event, create new signup, then register one freebie taken
             fe = FreebieEvent.query.get(self.event_id)
             fbsu = FreebieSignup(user_id=uid)
             fbsu.freebies_taken = 1
             fe.signups.append(fbsu)
-            db.Session.commit()
+            db.session.commit()
 
         # return new signup object
         fbsu.set_user(apiuser)
-        return self._clean_signup_obj(fbsu)
+        su = self._clean_signup_obj(fbsu)
+        return {'signup': su,
+                'message': '{:s} is member and got {:d} freebies!'.format(su['nethz'],
+                                                                          su['freebies_taken'])}
 
     def checkout_field(self, info):
         """ Register Freebie taken back from AMIV member """
@@ -171,20 +174,29 @@ class Freebies_Interface(AMIV_API_Interface):
                 fbsu.freebies_taken = fbsu.freebies_taken - 1
             else:
                 raise Exception('Member already at 0 Freebies taken.')
-            db.Session.commit()
+            db.session.commit()
         if len(fbsus) < 1:
             raise Exception("Member {} did not yet get a Freebie.".format(info))
 
         # return new signup object
         fbsu.set_user(apiuser)
-        return self._clean_signup_obj(fbsu)
+        su = self._clean_signup_obj(fbsu)
+        return {'signup': su,
+                'message': '{:s} is member and got {:d} freebies!'.format(su['nethz'],
+                                                                          su['freebies_taken'])}
 
     '''
     Freebie Tool Specific Methods
     '''
 
-    def create_new_freebies(self, title, desc=None, max_freebies=None):
-        """ Function to create a new GV with title and description """
+    def create_new_freebie_tracker(self, title, desc=None, max_freebies=None):
+        """ Function to create a new Freebie Tracker with title and description and max freebies """
+        # do some error checking on max_freebies
+        max_freebies = int(max_freebies)
+        if max_freebies < 1:
+            raise Exception('Number of maximum freebies must be greater or equal to 1.')
+
+        # actually create DB entry
         obj = FreebieEvent(title=title, description=desc, max_freebies=max_freebies)
         db.session.add(obj)
         db.session.commit()

@@ -43,8 +43,12 @@
         </tbody>
     </table>
     <br/>
-    {% if allow_create_new %}
+    {% if allow_create_new_gv %}
     <a href="{{ url_for('gvtool.new_gv') }}" class="btn btn-default" role="button">Open new GV</a>
+    <br/><br/>
+    {% endif %}
+    {% if allow_create_new_fb %}
+    <a href="{{ url_for('freebies.new_freebie') }}" class="btn btn-default" role="button">Open new Freebie Tracker</a>
     <br/><br/>
     {% endif %}
     <a href="{{ url_for('login.logout_and_delete_pin') }}" class="btn btn-default" role="button">Back</a>

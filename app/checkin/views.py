@@ -41,16 +41,15 @@ def checkin():
         checkmode = checkform.checkmode.data
         info = checkform.datainput.data
 
-        if pl.event_ended:
-            raise Exception('Event ended. No changes allowed.')
-
         try:
+            if pl.event_ended:
+                raise Exception('Event ended. No changes allowed.')
             if checkmode == 'in':
-                su = conn.checkin_field(info)
-                flash('{:s} member {:s} checked-IN!'.format(su['membership'].upper(), info))
+                rd = conn.checkin_field(info)
+                flash(rd['message'])
             else:
-                su = conn.checkout_field(info)
-                flash('{:s} member {:s} checked-OUT!'.format(su['membership'].upper(), info))
+                rd = conn.checkout_field(info)
+                flash(rd['message'])
         except Exception as E:
             flash('Error: '+str(E), 'error')
 

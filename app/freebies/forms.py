@@ -11,5 +11,5 @@ class CreateNewFreebieEvent(FlaskForm):
     """
     title = StringField('Event Title', default="Bier & Wurst")
     description = TextAreaField('Description (Date, Time, Location, ...)')
-    max_freebies = IntegerField('Maximum number of Freebies allowed for one member')
+    max_freebies = IntegerField('Maximum number of Freebies allowed for one member (natural number >= 0)')
     submit = SubmitField('Start new Freebie Event')
