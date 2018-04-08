@@ -9,7 +9,7 @@ from math import ceil
 
 from app import db
 from .amivapi_interface import AMIV_API_Interface
-from .freebies_models import FreebieEvent, FreebieSignup, FreebieLog
+from .freebies_models import FreebieEvent, FreebieSignup
 from ..connectors import freebies_id_string
 
 
