@@ -185,6 +185,11 @@ class Freebies_Interface(AMIV_API_Interface):
                 'message': '{:s} is member and got {:d} freebies!'.format(su['nethz'],
                                                                           su['freebies_taken'])}
 
+    def checkout_all_remaining(self):
+        """Called when closing the event. Useless in the freebies scenario, so this function does nothing."""
+        pass
+
+
     '''
     Freebie Tool Specific Methods
     '''
