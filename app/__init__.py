@@ -48,7 +48,7 @@ def create_app(config_name, file_based_secrets=True):
 
     # add all persistent data models
     from app import models
-    from .connectors import gvtool_models
+    from .connectors import gvtool_models, freebies_models
     from .security import models
 
     # add security module
@@ -67,6 +67,9 @@ def create_app(config_name, file_based_secrets=True):
 
     from .gvtool import gvtool_bp
     app.register_blueprint(gvtool_bp)
+
+    from .freebies import freebies_bp
+    app.register_blueprint(freebies_bp)
 
     # app initalized
     return app

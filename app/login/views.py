@@ -8,7 +8,7 @@ from . import login_bp, generate_secure_pin
 from .forms import PinLoginForm, CredentialsLoginForm
 from .. import db
 from ..models import PresenceList
-from ..connectors import create_connectors, get_connector_by_id, gvtool_id_string
+from ..connectors import create_connectors, get_connector_by_id, gvtool_id_string, freebies_id_string
 from ..security.security import register_failed_login_attempt, register_login_success
 
 
@@ -188,17 +188,22 @@ def chooseevent():
 
     # check if we are running on GVs:
     if conn.id_string == gvtool_id_string:
-        # when using the GV tool connector,
-        # we allow the user to create a new gv
-        show_new = True
+        show_new_gv = True
     else:
-        show_new = False
+        show_new_gv = False
+
+    # check if we are running on Freebie Tracker:
+    if conn.id_string == freebies_id_string:
+        show_new_fb = True
+    else:
+        show_new_fb = False
 
     # on GET, render page
     return make_response(render_template('login/chooseevent.html',
                                          title='Choose Event',
                                          upcoming_events=upcoming_events,
-                                         allow_create_new=show_new
+                                         allow_create_new_gv=show_new_gv,
+                                         allow_create_new_fb=show_new_fb
                                          ))
 
 
@@ -297,4 +302,5 @@ def privacy():
     """
     Display the privacy statement.
     """
-    return render_template('login/privacy.html')
+    return render_template('login/privacy.html',
+                           title='Privacy Statement')

@@ -191,7 +191,8 @@ class GV_Tool_Interface(AMIV_API_Interface):
 
         # return new signup object
         gvsu.set_user(apiuser)
-        return self._clean_signup_obj(gvsu)
+        su = self._clean_signup_obj(gvsu)
+        return {'message': '{:s} member checked-IN!'.format(su['membership'].upper()), 'signup': su}
 
     def checkout_field(self, info):
         """ Check out a user to an event by flipping the checked_in value """
@@ -212,7 +213,8 @@ class GV_Tool_Interface(AMIV_API_Interface):
 
         # return new signup object
         gvsu.set_user(apiuser)
-        return self._clean_signup_obj(gvsu)
+        su = self._clean_signup_obj(gvsu)
+        return {'message': '{:s} member checked-OUT!'.format(su['membership'].upper()), 'signup': su}
 
     '''
     GV Tool Specific Methods

@@ -207,9 +207,11 @@ class AMIV_API_Interface:
         """ Check in a user to an event by flipping the checked_in value """
         # find user according to info
         user_id = self._get_userinfo_from_info(info)['_id']
+
         # find the signup with the user
         r = self._api_get('/eventsignups?where={"user":"%s", "event":"%s"}' % (user_id, self.event_id))
         rj = r.json()
+
         # check numbers of signups
         if int(rj['_meta']['total']) > 1:
             raise Exception("More than one signup found for user: {}.".format(info))
@@ -219,6 +221,7 @@ class AMIV_API_Interface:
         rj = rj['_items'][0]
         if ('checked_in' in rj) and (rj['checked_in'] is True):
             raise Exception("User {} already checked in.".format(info))
+
         # create PATCH to check-in user
         esu_id = rj['_id']
         etag = rj['_etag']
@@ -228,15 +231,19 @@ class AMIV_API_Interface:
         r = requests.patch(url, auth=self.auth_obj, headers=header, data=payload)
         if r.status_code != 200:
             raise Exception('Could not check-in user: API responded {}.'.format(r.status_code))
-        return self._clean_signup_obj(r.json())
+
+        su = self._clean_signup_obj(r.json())
+        return {'message': '{:s} member checked-IN!'.format(su['membership'].upper()), 'signup': su}
 
     def checkout_field(self, info):
         """ Check out a user to an event by flipping the checked_in value """
         # find user according to info
         user_id = self._get_userinfo_from_info(info)['_id']
+
         # find the singup with the user
         r = self._api_get('/eventsignups?where={"user":"%s", "event":"%s"}' % (user_id, self.event_id))
         rj = r.json()
+
         # check numbers of signups
         if int(rj['_meta']['total']) > 1:
             raise Exception("More than one signup found for user: {}.".format(info))
@@ -250,6 +257,7 @@ class AMIV_API_Interface:
             raise Exception("User {} never checked-in before.".format(info))
         if rj['checked_in'] is False:
             raise Exception("User {} already checked out.".format(info))
+
         # create PATCH to check-out user
         esu_id = rj['_id']
         etag = rj['_etag']
@@ -260,7 +268,9 @@ class AMIV_API_Interface:
         r = requests.patch(url, auth=self.auth_obj, headers=header, data=payload)
         if r.status_code != 200:
             raise Exception('Could not check-out user: API responded {}.'.format(r.status_code))
-        return self._clean_signup_obj(r.json())
+
+        su = self._clean_signup_obj(r.json())
+        return {'message': '{:s} member checked-OUT!'.format(su['membership'].upper()), 'signup': su}
 
     def checkout_all_remaining(self):
         """ Check-out all remaining checked_in users """
