@@ -9,7 +9,7 @@ class Config(object):
     """
 
     # Put any configurations here that are common across all environments
-    AMIV_API_URL = "https://amiv-api.ethz.ch"
+    AMIV_API_URL = "https://api-dev.amiv.ethz.ch"
     AMIV_AUTH_GROUP_ID = "5a4ea42c10d8cf0015915151"
 
 
