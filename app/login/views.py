@@ -41,13 +41,13 @@ def login():
     if request.method == 'POST':
         if 'method_PIN' in request.values:
             if pinform.validate_on_submit():
-                
+
                 # PIN form was submitted, try user login
                 inputpin = pinform.pin.data
 
                 # get all presence lists with given PIN
                 presencelists = PresenceList.query.filter_by(pin=inputpin).all()
-                
+
                 if len(presencelists) > 1:
                     # we have a database error
                     raise Exception('Multiple PresenceList with same PIN found!')
@@ -61,7 +61,7 @@ def login():
 
                 register_failed_login_attempt()
                 flash('Invalid PIN.', 'error')
-                    
+
         elif 'method_Cred' in request.values:
             if credform.validate_on_submit():
 
@@ -71,7 +71,7 @@ def login():
                 # try to validate against connector
                 un = credform.username.data
                 pw = credform.password.data
-                try: 
+                try:
                     token = conn.login(un, pw)
                 except Exception as E:
                     register_failed_login_attempt()
@@ -88,7 +88,7 @@ def login():
                     pin = generate_secure_pin()
                     if len(PresenceList.query.filter_by(pin=pin).all()) == 0:
                         break
-                    retrycnt = retrycnt-1
+                    retrycnt = retrycnt - 1
                 if retrycnt == 0:
                     print("Could not find a free pin! Delete some PresenceList from DB!")
                     abort(500)
@@ -99,7 +99,7 @@ def login():
                 db.session.commit()
                 login_user(npl)
                 return redirect(url_for('login.chooseevent'))
-                    
+
         else:
             print('Did not find correct hidden value in POST request.')
             abort(400)
@@ -140,7 +140,7 @@ def chooseevent():
 
     # catch case where event_id is already assigned
     if pl.event_id is not None:
-        abort(403)
+        abort(make_response('Cannot chose new event for already opened event.', 403))
 
     # gather possible events in this list
     upcoming_events = []
@@ -149,9 +149,9 @@ def chooseevent():
     not_found_events = []  # save event ids of events which the API fails to GET
     found_events = []
     # query all presence lists for current event type
-    existing_pls = PresenceList.query\
-        .filter(PresenceList.conn_type == conn.id_string)\
-        .filter(PresenceList.event_id >= 0)\
+    existing_pls = PresenceList.query \
+        .filter(PresenceList.conn_type == conn.id_string) \
+        .filter(PresenceList.event_id >= 0) \
         .all()
     for pl in existing_pls:
         # retreive event information from data source
@@ -163,7 +163,10 @@ def chooseevent():
             continue
         # we found a tracked event, add it to the list
         found_events.append(pl.event_id)
-        upcoming_events.append(beautify_event(evobj, {'event_ended': pl.event_ended}))
+        # add extra info
+        extra_info = {'event_ended': pl.event_ended,
+                      'pin_available': pl.pin is not None}
+        upcoming_events.append(beautify_event(evobj, extra_info))
 
     # get upcoming events
     try:
@@ -173,7 +176,9 @@ def chooseevent():
         return logout_and_delete_pin()
     for e in events:
         if e['_id'] not in found_events:
-            upcoming_events.append(beautify_event(e, {'event_ended': False}))
+            extra_info = {'event_ended': False,
+                          'pin_available': False}
+            upcoming_events.append(beautify_event(e, extra_info))
 
     if len(not_found_events) > 0:
         flash('Warning: The following event IDs do '
@@ -210,7 +215,6 @@ def chooseevent():
 @login_bp.route('/chooseevent/select/<string:_id>')
 @login_required
 def select_chooseevent(_id):
-
     # get connector
     connectors = create_connectors()
     pl = current_user

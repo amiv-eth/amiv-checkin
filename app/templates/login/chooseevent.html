@@ -33,6 +33,8 @@
                 <a class="table_link" href="{{ url_for('login.select_chooseevent', _id=ev['_id']) }}">
                     {% if ev['event_ended'] %}
                         reopen
+                    {% elif ev['pin_available'] %}
+                        get pin
                     {% else %}
                         open
                     {% endif %}
