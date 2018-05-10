@@ -104,7 +104,7 @@ class GV_Tool_Interface(AMIV_API_Interface):
         for esu in gv.signups:
             response.append(self._clean_signup_obj(esu))
 
-        # safe this for get_statistics or get_gv_attendance_log
+        # safe this for get_statistics or get_log
         self.last_signups = deepcopy(response)
 
         # return final list of dicts
@@ -227,7 +227,7 @@ class GV_Tool_Interface(AMIV_API_Interface):
         db.session.commit()
         return gv
 
-    def get_gv_attendance_log(self):
+    def get_log(self):
         """
         Retrieve log of attendance changes for GV
         returns an ordered list of log entry dicts with the following keys:

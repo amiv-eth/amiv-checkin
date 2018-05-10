@@ -1,7 +1,10 @@
 # app/checkin/views.py
 
-from flask import flash, redirect, render_template, url_for, request, make_response, abort, jsonify
+from flask import flash, redirect, render_template, url_for, request, make_response, abort, jsonify, Response
 from flask_login import login_required, logout_user, current_user
+import csv
+import datetime
+from io import StringIO
 
 from . import checkin_bp
 from .forms import CheckForm, CSRFCheckForm
@@ -51,7 +54,7 @@ def checkin():
                 rd = conn.checkout_field(info)
                 flash(rd['message'])
         except Exception as E:
-            flash('Error: '+str(E), 'error')
+            flash('Error: ' + str(E), 'error')
 
     # fetch title and description
     try:
@@ -67,7 +70,7 @@ def checkin():
         event_start = ""
 
     # enable button for log download if we are in GV mode
-    if conn.id_string == gvtool_id_string:
+    if "get_log" in dir(conn):
         show_log_btn = True
     else:
         show_log_btn = False
@@ -214,3 +217,62 @@ def close_event():
     # inform user and redirect
     flash('Event closed.')
     return redirect(url_for('checkin.checkin'))
+
+
+@checkin_bp.route('/export_csv')
+@login_required
+def export_csv():
+    """
+    Let the user download a CSV file with all user check-in and check-out timestamps
+    """
+
+    # get connector
+    connectors = create_connectors()
+    pl = current_user
+    conn = get_connector_by_id(connectors, pl.conn_type)
+    conn.token_login(pl.token)
+
+    # catch if user did not choose an appropriate backend for log exprting
+    if "get_log" not in dir(conn):
+        abort(make_response('Cannot export CSV for a backend not providing get_log() function.', 403))
+
+    # catch case if the event is not chosen yet
+    if pl.event_id is None:
+        abort(make_response('Cannot export CSV for PresenceList with no assigned ID.', 403))
+
+    # retrieve list of cleaned log entries
+    conn.set_event(pl.event_id)
+    try:
+        event_reference = conn.get_event()
+        loglist = conn.get_log()
+    except Exception as E:
+        abort(make_response('Error with API access: {:s}'.format(str(E)), 502))
+
+    # assemble csv output file
+    outcsv = StringIO()  # creates a memory-mapped file structure
+    nlchar = '\r\n'
+
+    # header
+    outcsv.write('// AMIV Checkin Log File' + nlchar)
+    outcsv.write('// {:s}'.format(event_reference['title']) + nlchar)
+    if 'time_start' in event_reference:
+        outcsv.write('// {:s}'.format(event_reference['time_start'].strftime('%d.%m.%Y %H:%M')) + nlchar)
+    if 'description' in event_reference:
+        desc = event_reference['description'].replace('\n', '\n// ')
+        outcsv.write('// {:s}'.format(desc) + nlchar)
+    if len(loglist) > 0:
+        outcsv.write('// Columns: ' + ', '.join(['"' + str(k) + '"' for k, _ in loglist[0].items()]) + nlchar)
+
+    # add log data
+    csvwriter = csv.writer(outcsv, delimiter=',', quotechar='"', quoting=csv.QUOTE_ALL)
+    for log in loglist:
+        csvwriter.writerow([v for _, v in log.items()])
+
+    # create filename
+    fn = 'AMIV_Checkin_Log_{:s}'.format(str(int(datetime.datetime.now().timestamp())))
+
+    # return response (this results in a download file dialog in most browsers)
+    return Response(
+        outcsv.getvalue(),
+        mimetype="text/csv",
+        headers={"Content-disposition": "attachment; filename={:s}.csv".format(fn)})

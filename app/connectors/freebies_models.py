@@ -36,8 +36,27 @@ class FreebieSignup(db.Model):
     freebieevent_id = db.Column(db.Integer, db.ForeignKey('freebies_events._id'))
     FreebieEvent = db.relationship('FreebieEvent', back_populates='signups')
 
+    # relation to log
+    logs = db.relationship('FreebieLog', order_by='FreebieLog.timestamp', back_populates='FreebieSignup')
+
     def set_user(self, user):
         self.user = user
 
     def get_user(self):
         return self.user
+
+
+class FreebieLog(db.Model):
+    """
+    One log-book entry for the freebie log
+    """
+
+    __tablename__ = 'freebies_logs'
+
+    _id = db.Column(db.Integer, primary_key=True)
+    timestamp = db.Column(db.DateTime, nullable=False, server_default=db.func.now())
+    freebies_taken = db.Column(db.Integer)  # new state of freebies_taken field
+
+    # relation to gvsignup
+    freebiesignup_id = db.Column(db.Integer, db.ForeignKey('freebies_signups._id'))
+    FreebieSignup = db.relationship('FreebieSignup', back_populates='logs')

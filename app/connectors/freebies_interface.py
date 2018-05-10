@@ -5,16 +5,15 @@ from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
 
 # local imports
-from math import ceil
-
 from app import db
 from .amivapi_interface import AMIV_API_Interface
-from .freebies_models import FreebieEvent, FreebieSignup
+from .freebies_models import FreebieEvent, FreebieSignup, FreebieLog
 from ..connectors import freebies_id_string
 
 
 class Freebies_Interface(AMIV_API_Interface):
     """ Interface class to represent Freebie Events with member data from the AMIV API """
+
     def __init__(self):
         super().__init__()
 
@@ -74,7 +73,7 @@ class Freebies_Interface(AMIV_API_Interface):
         n_page = rj['_meta']['max_results']
 
         # split up gv.signups into page-sized sub lists
-        fbsu_splits = [fbev.signups[j:j+n_page] for j in range(0, len(fbev.signups), n_page)]
+        fbsu_splits = [fbev.signups[j:j + n_page] for j in range(0, len(fbev.signups), n_page)]
 
         # save retrieved users in dict using the users _id as index
         _users = dict()
@@ -105,7 +104,7 @@ class Freebies_Interface(AMIV_API_Interface):
         for esu in fbev.signups:
             response.append(self._clean_signup_obj(esu))
 
-        # safe this for get_statistics or get_gv_attendance_log
+        # safe this for get_statistics or get_log
         self.last_signups = deepcopy(response)
 
         # return final list of dicts
@@ -140,13 +139,17 @@ class Freebies_Interface(AMIV_API_Interface):
             fbsu = fbsus[0]
             if (fbsu.freebies_taken is not None) and (fbsu.freebies_taken >= fbsu.FreebieEvent.max_freebies):
                 raise Exception('Member reached maximum Freebies!')
+            if fbsu.freebies_taken is None:
+                raise Exception('Internal Error: member is registered, but has freebies_taken property set to None.')
             fbsu.freebies_taken = fbsu.freebies_taken + 1
+            fbsu.logs.append(FreebieLog(freebies_taken=fbsu.freebies_taken, timestamp=datetime.datetime.now()))
             db.session.commit()
         if len(fbsus) < 1:
             # user not yet in event, create new signup, then register one freebie taken
             fe = FreebieEvent.query.get(self.event_id)
             fbsu = FreebieSignup(user_id=uid)
             fbsu.freebies_taken = 1
+            fbsu.logs.append(FreebieLog(freebies_taken=fbsu.freebies_taken, timestamp=datetime.datetime.now()))
             fe.signups.append(fbsu)
             db.session.commit()
 
@@ -172,6 +175,7 @@ class Freebies_Interface(AMIV_API_Interface):
             fbsu = fbsus[0]
             if (fbsu.freebies_taken is not None) and (fbsu.freebies_taken > 0):
                 fbsu.freebies_taken = fbsu.freebies_taken - 1
+                fbsu.logs.append(FreebieLog(freebies_taken=fbsu.freebies_taken, timestamp=datetime.datetime.now()))
             else:
                 raise Exception('Member already at 0 Freebies taken.')
             db.session.commit()
@@ -188,7 +192,6 @@ class Freebies_Interface(AMIV_API_Interface):
     def checkout_all_remaining(self):
         """Called when closing the event. Useless in the freebies scenario, so this function does nothing."""
         pass
-
 
     '''
     Freebie Tool Specific Methods
@@ -207,3 +210,45 @@ class Freebies_Interface(AMIV_API_Interface):
         db.session.commit()
         return obj
 
+    def get_log(self):
+        """
+        Retrieve log of attendance changes for GV
+        returns an ordered list of log entry dicts with the following keys:
+            timestamp:  datetime of timestamp
+            nethz:      nethz name of user
+            email:      email of user
+            membership: membership status of user
+            freebies_taken: how many freebies the user took now
+        """
+        if self.last_signups is None:
+            self.get_signups_for_event()
+
+        # query all logs
+        freebie_logs = FreebieLog.query \
+            .filter(FreebieSignup.freebieevent_id == self.event_id,
+                    FreebieLog.freebiesignup_id == FreebieSignup._id) \
+            .order_by(FreebieLog.timestamp.asc()) \
+            .all()
+
+        # loop variables
+        out_list = list()
+
+        # assemble output data
+        for log_entry in freebie_logs:
+            d = OrderedDict()  # we want to remember the insertion order of the keys
+
+            # find user information in stored last_signups list by matching FreebieSignup._id
+            sidx = [i for i, _ in enumerate(self.last_signups) if _['signup_id'] == log_entry.freebiesignup_id][0]
+            participant = self.last_signups[sidx]
+
+            # output dict per log entry
+            d['timestamp'] = log_entry.timestamp
+            d['nethz'] = participant['nethz']
+            d['email'] = participant['email']
+            d['membership'] = participant['membership']
+            d['freebies_taken'] = log_entry.freebies_taken
+
+            out_list.append(d)
+
+        # return final list
+        return out_list

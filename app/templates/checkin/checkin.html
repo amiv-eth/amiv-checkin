@@ -100,15 +100,15 @@
 
         {% if log_download %}
         <br/>
-        <a href="{{ url_for('gvtool.export_csv') }}" class="center-block">
-            <button class="btn btn-default center-block"> Export Attendance Log as .csv File </button>
+        <a href="{{ url_for('checkin.export_csv') }}" class="center-block">
+            <button class="btn btn-default center-block"> Export Log as .csv File </button>
         </a>
         {% endif %}
 
         {% if not event_ended %}
         <br/>
         <a id="close_event_link" href="#" onclick="confirm_close_event();return false;" class="center-block">
-            <button class="btn btn-default center-block"> Check-out all Participants and Close Event </button>
+            <button class="btn btn-default center-block"> Close Event </button>
         </a>
         {% endif %}
     </div>
