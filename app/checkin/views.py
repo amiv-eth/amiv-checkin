@@ -11,7 +11,7 @@ from .forms import CheckForm, CSRFCheckForm
 from .. import db
 from ..login import generate_secure_pin
 from ..models import PresenceList
-from ..connectors import create_connectors, get_connector_by_id, gvtool_id_string
+from ..connectors import create_connectors, get_connector_by_id
 from ..security.security import register_failed_login_attempt, register_login_success
 
 
@@ -69,7 +69,8 @@ def checkin():
         event_title = "< unknown >"
         event_start = ""
 
-    # enable button for log download if we are in GV mode
+    # enable button for log download if the current connector offers a get_log() function
+    # to allow the user to download the .csv log
     if "get_log" in dir(conn):
         show_log_btn = True
     else:
@@ -238,7 +239,7 @@ def export_csv():
 
     # catch case if the event is not chosen yet
     if pl.event_id is None:
-        abort(make_response('Cannot export CSV for PresenceList with no assigned ID.', 403))
+        abort(make_response('Cannot export CSV for PresenceList with no assigned event ID.', 403))
 
     # retrieve list of cleaned log entries
     conn.set_event(pl.event_id)
