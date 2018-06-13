@@ -53,7 +53,10 @@ def create_app(config_name, file_based_secrets=True):
 
     # add security module
     from .security import security
-    security.init(app)
+    if num_proxies >= 0:
+        # allows disabling IP bans by setting a negative SECURITY_NUM_PROXY_LEVELS value
+        # failed login attempts are still recorded in the DB!
+        security.init(app)
 
     # add all blueprints
     from .login import login_bp
