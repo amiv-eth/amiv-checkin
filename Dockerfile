@@ -5,8 +5,6 @@ RUN adduser -Dh /checkin checkin
 WORKDIR /checkin
 # API will run on port 80
 EXPOSE 8080
-# Environment variable for config, use path for docker secrets as default
-#ENV AMIVAPI_CONFIG=/run/secrets/amivapi_config
 
 # Install bjoern and dependencies for install (we need to keep libev)
 RUN apk add --no-cache --virtual .deps \
@@ -21,9 +19,11 @@ RUN pip install -r /checkin/requirements.txt
 # Cleanup dependencies
 RUN apk del .deps
 
+# Update permissions for entrypoint
+RUN chmod 755 entrypoint.sh
+
 # Switch user
 USER checkin
 
-# Start bjoern
-CMD ["python3", "run_docker.py"]
-
+# Start application
+CMD [ "./entrypoint.sh" ]
