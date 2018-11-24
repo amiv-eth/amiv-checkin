@@ -137,27 +137,24 @@ class AMIV_API_Interface:
         return ev
 
     def _clean_signup_obj(self, raw_signup):
-        user_info = raw_signup['user']
-        # translate non-existing value to None (these values are optional in API)
-        if 'checked_in' in raw_signup:
-            cki = raw_signup['checked_in']
+        if 'user' in raw_signup:
+            user_info = raw_signup['user']
         else:
-            cki = None
-        if 'legi' in user_info:
-            legi = user_info['legi']
-        else:
-            legi = None
+            # unregistered user signup with email only
+            # the email field is stored in the signup object
+            user_info = {'email': raw_signup['email']}
+
         # assemble signup dict
         return {
-            'firstname': user_info['firstname'],
-            'lastname': user_info['lastname'],
-            'nethz': user_info['nethz'],
-            'email': user_info['email'],
-            'checked_in': cki,
-            'legi': legi,
-            'membership': user_info['membership'],
-            'user_id': user_info['_id'],
-            'signup_id': raw_signup['_id']}
+            'firstname': user_info.get('firstname', '*Unregistered*'),
+            'lastname': user_info.get('lastname', '*User*'),
+            'nethz': user_info.get('nethz'),
+            'email': user_info.get('email'),
+            'checked_in': raw_signup.get('checked_in'),
+            'legi': user_info.get('legi'),
+            'membership': user_info.get('membership'),
+            'user_id': user_info.get('_id'),
+            'signup_id': raw_signup.get('_id')}
 
     def get_next_events(self, filter_resp=True):
         """ Fetch the upcoming events between today and tomorrow """

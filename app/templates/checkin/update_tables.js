@@ -5,7 +5,7 @@ function hide_flash_messages() {
 
 function beautify_legi(rawlegi) {
     if (rawlegi === null) {
-        legi = "unknown";
+        legi = "-";
     } else {
         legi = rawlegi;
     }
@@ -24,7 +24,21 @@ function beautify_checkin(rawchecked_in) {
 }
 
 function beautify_membership(rawmembership) {
-    return rawmembership.charAt(0).toUpperCase() + rawmembership.slice(1);
+    if (rawmembership === null) {
+        ms = 'none'
+    } else {
+        ms = rawmembership.charAt(0).toUpperCase() + rawmembership.slice(1);
+    }
+    return ms
+}
+
+function beautify_nethz(rawnethz){
+    if (rawnethz === null) {
+        nethz = '-'
+    } else {
+        nethz = rawnethz
+    }
+    return nethz
 }
 
 function update_data() {
@@ -38,7 +52,7 @@ function update_data() {
             var newRows = "";
             for (var i in data.signups) {
                 newRows += "<tr><td>" + data.signups[i].firstname + " " + data.signups[i].lastname + "</td>"
-                newRows += "<td>" + data.signups[i].nethz + "</td>"
+                newRows += "<td>" + beautify_nethz(data.signups[i].nethz) + "</td>"
                 newRows += "<td>" + beautify_legi(data.signups[i].legi) + "</td>"
                 newRows += "<td>" + data.signups[i].email + "</td>"
                 newRows += "<td>" + beautify_membership(data.signups[i].membership) + "</td>"
