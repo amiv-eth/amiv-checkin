@@ -1,4 +1,4 @@
-FROM python:3.6-alpine
+FROM python:3.7-alpine
 
 # Create user with home directory and no password and change workdir
 RUN adduser -Dh /checkin checkin
@@ -10,6 +10,7 @@ EXPOSE 8080
 RUN apk add --no-cache --virtual .deps \
         musl-dev python-dev gcc git && \
     apk add --no-cache libev-dev && \
+    apk add --no-cache libffi-dev && \
     pip install bjoern
 
 # Copy files to /api directory, install requirements
