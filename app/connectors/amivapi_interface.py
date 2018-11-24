@@ -155,7 +155,7 @@ class AMIV_API_Interface:
             'email': user_info.get('email'),
             'checked_in': raw_signup.get('checked_in'),
             'legi': user_info.get('legi'),
-            'membership': user_info.get('membership'),
+            'membership': user_info.get('membership', 'none'),
             'user_id': user_info.get('_id'),
             'signup_id': raw_signup.get('_id')}
 
@@ -245,18 +245,27 @@ class AMIV_API_Interface:
 
     def checkin_field(self, info):
         """ Check in a user to an event by flipping the checked_in value """
-        # find user according to info
-        user_id = self._get_userinfo_from_info(info)['_id']
+        info = str(info).strip().lower()  # get rid of whitespace and make everything lower letters
 
-        # find the signup with the user
-        r = self._api_get('/eventsignups?where={"user":"%s", "event":"%s"}' % (user_id, self.event_id))
-        rj = r.json()
+        num_anonymous = 0
+        if '@' in info:
+            # there is an email in info, check the email field for all the anonymous, email only signups
+            r = self._api_get('/eventsignups?where={"email":"%s", "event":"%s"}' % (info, self.event_id))
+            rj = r.json()
+            num_anonymous = int(rj['_meta']['total'])
+
+        # in case it is not an email or the anonymous search did not produce any result, look for other user info
+        if ('@' not in info) or (num_anonymous < 1):
+            user_id = self._get_userinfo_from_info(info)['_id']
+            r = self._api_get('/eventsignups?where={"user":"%s", "event":"%s"}' % (user_id, self.event_id))
+            rj = r.json()
 
         # check numbers of signups
         if int(rj['_meta']['total']) > 1:
             raise Exception("More than one signup found for user: {}.".format(info))
         if int(rj['_meta']['total']) < 1:
             raise Exception("User {} not signed-up for event.".format(info))
+
         # found exactly one signup
         rj = rj['_items'][0]
         if ('checked_in' in rj) and (rj['checked_in'] is True):
@@ -278,12 +287,20 @@ class AMIV_API_Interface:
 
     def checkout_field(self, info):
         """ Check out a user to an event by flipping the checked_in value """
-        # find user according to info
-        user_id = self._get_userinfo_from_info(info)['_id']
+        info = str(info).strip().lower()  # get rid of whitespace and make everything lower letters
 
-        # find the singup with the user
-        r = self._api_get('/eventsignups?where={"user":"%s", "event":"%s"}' % (user_id, self.event_id))
-        rj = r.json()
+        num_anonymous = 0
+        if '@' in info:
+            # there is an email in info, check the email field for all the anonymous, email only signups
+            r = self._api_get('/eventsignups?where={"email":"%s", "event":"%s"}' % (info, self.event_id))
+            rj = r.json()
+            num_anonymous = int(rj['_meta']['total'])
+
+        # in case it is not an email or the anonymous search did not produce any result, look for other user info
+        if ('@' not in info) or (num_anonymous < 1):
+            user_id = self._get_userinfo_from_info(info)['_id']
+            r = self._api_get('/eventsignups?where={"user":"%s", "event":"%s"}' % (user_id, self.event_id))
+            rj = r.json()
 
         # check numbers of signups
         if int(rj['_meta']['total']) > 1:
