@@ -1,6 +1,7 @@
 from collections import OrderedDict
 from datetime import datetime, timedelta
 import requests
+import re
 from math import ceil
 from copy import deepcopy
 from flask import current_app as app
@@ -32,6 +33,8 @@ class AMIV_API_Interface:
         self.mem_ext_key = 'extraordinary'
         self.mem_hon_key = 'honorary'
         self.non_mem_key = 'none'
+
+        self.legi_regex = re.compile("[sS]?[0-9]{8}")
 
         self.minimum_permissions = {
             'users': 'read',
@@ -223,12 +226,12 @@ class AMIV_API_Interface:
         # decide on data-type:
         if '@' in info:
             _filter = 'email'
-        elif info.isalpha():
-            _filter = 'nethz'
-        else:
+        elif self.legi_regex.match(info):
             if info[0] is 's':
                 info = info.replace('s', '')
             _filter = 'legi'
+        else:
+            _filter = 'nethz'
         # formulate request
         r = self._api_get('/users?where={"%s":"%s"}' % (_filter, info))
         rj = r.json()
