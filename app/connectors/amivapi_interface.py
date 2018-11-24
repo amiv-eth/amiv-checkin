@@ -8,6 +8,7 @@ from flask import current_app as app
 
 class AMIV_API_Interface:
     """ Interface class to fetch and update data through the AMIV API """
+
     def __init__(self):
         self.api_url = app.config.get('AMIV_API_URL')
         if self.api_url is None:
@@ -32,6 +33,12 @@ class AMIV_API_Interface:
         self.mem_hon_key = 'honorary'
         self.non_mem_key = 'none'
 
+        self.minimum_permissions = {
+            'users': 'read',
+            'eventsignups': 'readwrite'
+        }
+        # 'events': 'read',  # any logged in user has this anyway and this permission need not to be checked here
+
     def login(self, username, password):
         """ Log in the user to obtain usable token for requests """
         payload = {"username": str(username), "password": str(password)}
@@ -42,15 +49,43 @@ class AMIV_API_Interface:
             self.auth_obj = requests.auth.HTTPBasicAuth(self.token, "")
         else:
             raise Exception('Invalid username or password')
-
-        # check if logged in user is part of authentication group
+        # get all groups of the user and embed their details to get permission information
         uid = rj['user']
-        _filter = '{"group":"%s", "user":"%s"}' % (self.auth_group_id, uid)
-        r = self._api_get('/groupmemberships?where=' + _filter)
-        rj = r.json()
-        if len(rj['_items']) != 1:
-            raise Exception('User not in Checkin-WebApp authorized group.')
+        _filter = '{"user":"%s"}' % uid
+        _memberships = self._api_get_all_items('/groupmemberships',
+                                               'where=' + _filter + '&embedded={"group":1}')
+        # get this users group-based permissions
+        users_permissions = {}
+        for ms in _memberships:
+            # skip all groups which do not have permissions fixed or which do not exist anymore
+            if ('group' not in ms) or (ms['group'] is None) or ('permissions' not in ms['group']):
+                continue
+            # then we go through all permissions and save them
+            for k, v in ms['group']['permissions'].items():
+                if k in users_permissions:
+                    # overwrite permission only if we have write in it (i.e. it's more powerful)
+                    if 'write' in v:
+                        users_permissions[k] = v
+                else:
+                    # store new permission
+                    users_permissions[k] = v
 
+        # check if the user has the required permissions and give exact error messages
+        for p_name, p_level in self.minimum_permissions.items():
+            if p_name not in users_permissions:
+                raise Exception("API user {:s} does not have the '{:s}':'{:s}' permission in any of his groups.".format(
+                    username,
+                    p_name,
+                    p_level))
+            if p_level not in users_permissions[p_name]:
+                raise Exception("API user's {:s} permission '{:s}':'{:s}' does not have the required level of '{:s}' "
+                                "in any of his groups.".format(
+                    username,
+                    p_name,
+                    users_permissions[p_name],
+                    p_level
+                ))
+        # all
         return self.token
 
     def token_login(self, token):
@@ -63,6 +98,24 @@ class AMIV_API_Interface:
         if r.status_code != 200:
             raise Exception('GET failed - URL:{} - HTTP {}'.format(r.url, r.status_code))
         return r
+
+    def _api_get_all_items(self, url, options):
+        """ When getting multiple items, this method retrieves all items from all pages """
+        rj = self._api_get(str(url) + '?' + str(options)).json()
+        _items = [x for x in rj['_items']]
+        # get information how many items there are in total and how many items are on one page
+        ntotal = rj['_meta']['total']
+        npage = rj['_meta']['max_results']
+        # execute the get request for all other pages
+        for p in range(2, int(ceil(ntotal / npage)) + 1):
+            r = self._api_get(url + '?page={:d}&'.format(p) + str(options))
+            _items.extend(r.json()['_items'])
+        # double check if we got all items and return
+        assert len(_items) == ntotal, 'Number of items retrieved ({:d}) does not match APIs total value ({:d}).'.format(
+            len(_items),
+            ntotal
+        )
+        return _items
 
     def _clean_event_obj(self, raw_event):
         """ Re-format the event object from the API to easier, internal representation """
@@ -113,22 +166,16 @@ class AMIV_API_Interface:
             low_bound = low_bound.strftime(self.datetime_format)
             up_bound = datetime.today() + timedelta(days=100)
             up_bound = up_bound.strftime(self.datetime_format)
-            _range = '{"time_start":{"$gt":"'+low_bound+'","$lt":"'+up_bound+'"}, "spots":{"$gte":0}}'
+            _range = '{"time_start":{"$gt":"' + low_bound + '","$lt":"' + up_bound + '"}, "spots":{"$gte":0}}'
         else:
             # debug case: do not filter for time, just display all
             _range = '{"spots":{"$gte":0}}'
-        r = self._api_get('/events?where=' + _range)
-        _events = [x for x in r.json()['_items']]
 
-        # get all events from the rest of the pages
-        ntotal = r.json()['_meta']['total']
-        npage = r.json()['_meta']['max_results']
-        if min(ntotal, npage) is 0:
+        _events = self._api_get_all_items('/events',
+                                          'where=' + _range)
+
+        if len(_events) is 0:
             raise Exception("No Events found in the next 100 days.")
-
-        for p in range(2, int(ceil(ntotal/npage))+1):
-            r = self._api_get('/events?page={}&where={}'.format(str(p), _range))
-            _events.extend(r.json()['_items'])
 
         if filter_resp:
             return [self._clean_event_obj(e) for e in _events]
@@ -146,16 +193,9 @@ class AMIV_API_Interface:
 
     def get_signups_for_event(self):
         """ Fetch the list of participants for a specific event """
-        r = self._api_get('/eventsignups?where={"event":"%s"}&embedded={"user":1}' % self.event_id)
-        _signups = [x for x in r.json()['_items']]
 
-        # get all signups from all pages
-        ntotal = r.json()['_meta']['total']
-        npage = r.json()['_meta']['max_results']
-
-        for p in range(2, int(ceil(ntotal / npage))+1):
-            r = self._api_get('/eventsignups?where={"event":"%s"}&embedded={"user":1}&page=%s' % (self.event_id, str(p)))
-            _signups.extend(r.json()['_items'])
+        _signups = self._api_get_all_items('/eventsignups',
+                                           'where={"event":"%s"}&embedded={"user":1}' % self.event_id)
 
         response = list()
         for eventsignup in _signups:
