@@ -126,6 +126,9 @@ def checkin_update_data():
     except Exception as E:
         abort(make_response('Error with API access: {:s}'.format(repr(E)), 502))
 
+    # sort signups
+    signups.sort(key=lambda su: int(su['position']))
+
     # fetch statistics
     try:
         stats = conn.get_statistics()

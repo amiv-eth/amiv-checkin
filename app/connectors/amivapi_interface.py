@@ -157,6 +157,8 @@ class AMIV_API_Interface:
             'legi': user_info.get('legi'),
             'membership': user_info.get('membership', 'none'),
             'user_id': user_info.get('_id'),
+            'accepted': raw_signup.get('accepted'),
+            'position': raw_signup.get('position'),
             'signup_id': raw_signup.get('_id')}
 
     def get_next_events(self, filter_resp=True):
@@ -270,6 +272,9 @@ class AMIV_API_Interface:
         rj = rj['_items'][0]
         if ('checked_in' in rj) and (rj['checked_in'] is True):
             raise Exception("User {} already checked in.".format(info))
+        if not rj['accepted']:
+            raise Exception("User {} is not accepted for participation in this event and cannot be checked in.".format(
+                info))
 
         # create PATCH to check-in user
         esu_id = rj['_id']

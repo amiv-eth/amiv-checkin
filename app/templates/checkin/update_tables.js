@@ -12,9 +12,13 @@ function beautify_legi(rawlegi) {
     return legi;
 }
 
-function beautify_checkin(rawchecked_in) {
+function beautify_checkin(rawchecked_in, accepted) {
     if (rawchecked_in === null) {
-        checked_in = "-";
+        if (accepted === false) {
+            checked_in = "not accepted";
+        } else {
+            checked_in = "-";
+        }
     } else if(rawchecked_in === true) {
         checked_in = "IN";
     } else {
@@ -51,16 +55,22 @@ function update_data() {
 
             var newRows = "";
             for (var i in data.signups) {
-                newRows += "<tr><td>" + data.signups[i].firstname + " " + data.signups[i].lastname + "</td>"
+                if (data.signups[i].accepted) {
+                    newRows += "<tr>"
+                } else {
+                    newRows += "<tr class=\"text-muted\">"
+                }
+                newRows += "<td>" + data.signups[i].firstname + " " + data.signups[i].lastname + "</td>"
                 newRows += "<td>" + beautify_nethz(data.signups[i].nethz) + "</td>"
                 newRows += "<td>" + beautify_legi(data.signups[i].legi) + "</td>"
                 newRows += "<td>" + data.signups[i].email + "</td>"
                 newRows += "<td>" + beautify_membership(data.signups[i].membership) + "</td>"
                 if (data.signups[i].hasOwnProperty('checked_in')) {
-                    newRows += "<td>" + beautify_checkin(data.signups[i].checked_in) + "</td></tr>";
+                    newRows += "<td>" + beautify_checkin(data.signups[i].checked_in, data.signups[i].accepted) + "</td>";
                 } else if (data.signups[i].hasOwnProperty('freebies_taken')) {
-                    newRows += "<td>" + data.signups[i].freebies_taken + "</td></tr>";
+                    newRows += "<td>" + data.signups[i].freebies_taken + "</td>";
                 }
+                newRows += "</tr>"
             }
             $('#tbody_signups').html(newRows);
 
