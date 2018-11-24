@@ -124,13 +124,13 @@ def checkin_update_data():
     try:
         signups = conn.get_signups_for_event()
     except Exception as E:
-        abort(make_response('Error with API access: {:s}'.format(str(E)), 502))
+        abort(make_response('Error with API access: {:s}'.format(repr(E)), 502))
 
     # fetch statistics
     try:
         stats = conn.get_statistics()
     except Exception as E:
-        abort(make_response('Error with API access: {:s}'.format(str(E)), 502))
+        abort(make_response('Error with API access: {:s}'.format(repr(E)), 502))
     statsl = list()
     for k in stats:
         statsl.append({'key': k, 'value': stats[k]})
@@ -139,7 +139,7 @@ def checkin_update_data():
     try:
         evobj = conn.get_event()
     except Exception as E:
-        abort(make_response('Error with API access: {:s}'.format(str(E)), 502))
+        abort(make_response('Error with API access: {:s}'.format(repr(E)), 502))
     evobj['event_type'] = conn.human_string  # add description of event type
 
     j = {'signups': signups, 'statistics': statsl, 'eventinfos': evobj}
