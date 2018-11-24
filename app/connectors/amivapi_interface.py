@@ -265,12 +265,13 @@ class AMIV_API_Interface:
         # create PATCH to check-in user
         esu_id = rj['_id']
         etag = rj['_etag']
-        url = self.api_url + '/eventsignups/%s?embedded={"user":1}' % esu_id  # we must target specific eventsignup with id
+        # we must target specific eventsignup with id in request
+        url = self.api_url + '/eventsignups/%s?embedded={"user":1}' % esu_id
         header = {'If-Match': etag}
         payload = {"checked_in": "True"}
         r = requests.patch(url, auth=self.auth_obj, headers=header, data=payload)
         if r.status_code != 200:
-            raise Exception('Could not check-in user: API responded {}.'.format(r.status_code))
+            raise Exception('Could not check-in user: API error {}.'.format(r.status_code))
 
         su = self._clean_signup_obj(r.json())
         return {'message': '{:s} member checked-IN!'.format(su['membership'].upper()), 'signup': su}
