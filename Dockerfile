@@ -10,7 +10,7 @@ EXPOSE 8080
 RUN apk add --no-cache --virtual .deps \
         musl-dev python-dev gcc git && \
     apk add --no-cache libev-dev && \
-    apk add --no-cache libffi-dev && \
+    apk add --no-cache libffi-dev libressl-dev && \
     pip install bjoern
 
 # Copy files to /api directory, install requirements
