@@ -49,6 +49,8 @@ class GV_Tool_Interface(AMIV_API_Interface):
             'legi': legi,
             'membership': user_info['membership'],
             'user_id': user_info['_id'],
+            'position': raw_signup._id,
+            'accepted': True,
             'signup_id': raw_signup._id}
 
     def get_next_events(self, filter_resp=True):
