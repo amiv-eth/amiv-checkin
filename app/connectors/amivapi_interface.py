@@ -15,10 +15,6 @@ class AMIV_API_Interface:
         if self.api_url is None:
             raise Exception('AMIV_API_URL missing in flask config.')
 
-        self.auth_group_id = app.config.get('AMIV_AUTH_GROUP_ID')
-        if self.auth_group_id is None:
-            raise Exception('AMIV_AUTH_GROUP_ID missing in flask config')
-
         self.token = ""
         self.auth_obj = ""
         self.event_id = ""
