@@ -1,0 +1,18 @@
+# list all your hard requirements here
+
+# pip package upgrade tools
+pip-tools
+
+# Flask: the main web framework
+flask
+flask-bootstrap
+flask-login
+flask-migrate
+flask-sqlalchemy
+flask-wtf
+
+# database connector (GV and Freebies)
+pymysql
+
+# amivapi connector
+requests
